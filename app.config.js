@@ -13,7 +13,7 @@ module.exports = {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.duckerforge.seekercraft",
-      buildNumber: "7",
+      buildNumber: "8",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -26,7 +26,7 @@ module.exports = {
         backgroundColor: "#1a1a2e",
       },
       package: "com.duckerforge.seekercraft",
-      versionCode: 7,
+      versionCode: 8,
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },
