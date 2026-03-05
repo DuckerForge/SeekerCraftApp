@@ -35,6 +35,7 @@ module.exports = {
       favicon: "./assets/images/favicon.png",
     },
     plugins: [
+      "./plugins/removePermissions",
       "expo-router",
       [
         "expo-splash-screen",
