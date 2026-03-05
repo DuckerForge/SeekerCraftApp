@@ -38,6 +38,8 @@
   "new_game_title": "편집 모드",
   "new_game_sub": "새 레벨 이름을 지어주세요",
   "new_game_placeholder": "예: 하늘 성, 네온 드롭...",
+  "how_to_create_levels": "레벨 만드는 방법",
+  "create_levels_steps": "1. +를 탭해 새 레벨 생성\n2. 도구 선택 후 셀을 탭해 말뚝 배치\n3. SKR (금) 말뚝 최소 1개 추가\n4. PLAY TEST로 테스트\n5. 커뮤니티에 공개",
   "create": "만들기",
   "name_required_title": "이름 필요",
   "name_required_msg": "레벨 이름을 입력하세요!",

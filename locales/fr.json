@@ -38,6 +38,8 @@
   "new_game_title": "MODE ÉDITEUR",
   "new_game_sub": "Nommez votre nouveau niveau",
   "new_game_placeholder": "ex. Château Céleste, Chute Néon...",
+  "how_to_create_levels": "COMMENT CRÉER DES NIVEAUX",
+  "create_levels_steps": "1. Appuyer sur + pour créer un niveau\n2. Choisir un outil et taper sur les cellules\n3. Ajouter au moins 1 peg SKR (or)\n4. Tester avec PLAY TEST\n5. Publier pour partager avec la communauté",
   "create": "CRÉER",
   "name_required_title": "Nom requis",
   "name_required_msg": "Donnez un nom à votre niveau !",

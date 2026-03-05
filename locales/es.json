@@ -38,6 +38,8 @@
   "new_game_title": "MODO EDICIÓN",
   "new_game_sub": "Nombra tu nuevo nivel",
   "new_game_placeholder": "ej. Castillo Celeste, Neón Drop...",
+  "how_to_create_levels": "CÓMO CREAR NIVELES",
+  "create_levels_steps": "1. Toca + para crear un nuevo nivel\n2. Selecciona una herramienta y toca las celdas\n3. Añade al menos 1 peg SKR (dorado)\n4. Prueba con PLAY TEST\n5. Publica para compartir con la comunidad",
   "create": "CREAR",
   "name_required_title": "Nombre requerido",
   "name_required_msg": "¡Dale un nombre a tu nivel!",

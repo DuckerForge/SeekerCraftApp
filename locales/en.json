@@ -38,6 +38,8 @@
   "new_game_title": "EDIT MODE",
   "new_game_sub": "Name your new level",
   "new_game_placeholder": "e.g. Sky Castle, Neon Drop...",
+  "how_to_create_levels": "HOW TO CREATE LEVELS",
+  "create_levels_steps": "1. Tap + to create a new level\n2. Select a tool and tap cells to place pegs\n3. Add at least 1 SKR (gold) peg\n4. Test your level with PLAY TEST\n5. Publish to share with the community",
   "create": "CREATE",
   "name_required_title": "Name required",
   "name_required_msg": "Give your level a name!",

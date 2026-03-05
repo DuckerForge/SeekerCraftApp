@@ -38,6 +38,8 @@
   "new_game_title": "エディットモード",
   "new_game_sub": "新しいレベルに名前をつけよう",
   "new_game_placeholder": "例: スカイキャッスル、ネオンドロップ...",
+  "how_to_create_levels": "レベル作成ガイド",
+  "create_levels_steps": "1. +をタップして新しいレベルを作成\n2. ツールを選んでセルをタップ\n3. SKRペグ（金）を1つ以上追加\n4. PLAY TESTでテスト\n5. コミュニティに公開",
   "create": "作成",
   "name_required_title": "名前が必要です",
   "name_required_msg": "レベルに名前をつけてください！",

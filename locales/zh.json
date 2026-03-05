@@ -38,6 +38,8 @@
   "new_game_title": "编辑模式",
   "new_game_sub": "为你的新关卡命名",
   "new_game_placeholder": "例如：天空城堡、霓虹坠落...",
+  "how_to_create_levels": "如何创建关卡",
+  "create_levels_steps": "1. 点击+创建新关卡\n2. 选择工具，点击格子放置钉子\n3. 至少添加1个SKR（金色）钉子\n4. 用PLAY TEST测试关卡\n5. 发布与社区共享",
   "create": "创建",
   "name_required_title": "需要名称",
   "name_required_msg": "给你的关卡取个名字吧！",

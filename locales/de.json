@@ -38,6 +38,8 @@
   "new_game_title": "EDITOR-MODUS",
   "new_game_sub": "Benenne dein neues Level",
   "new_game_placeholder": "z.B. Himmelsburg, Neon-Tropfen...",
+  "how_to_create_levels": "LEVELS ERSTELLEN",
+  "create_levels_steps": "1. + tippen, um ein Level zu erstellen\n2. Werkzeug wählen, Zellen antippen\n3. Mind. 1 SKR-Peg (Gold) hinzufügen\n4. Mit PLAY TEST testen\n5. Veröffentlichen und mit Community teilen",
   "create": "ERSTELLEN",
   "name_required_title": "Name erforderlich",
   "name_required_msg": "Gib deinem Level einen Namen!",

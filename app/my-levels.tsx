@@ -471,7 +471,7 @@ export default function MyLevelsScreen() {
           padding: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.10)',
         }}>
           <TouchableOpacity onPress={() => { playBack(); router.back(); }}>
-            <Text style={{ color: C.gold, fontSize: 14, fontWeight: 'bold', fontFamily: 'monospace' }}>← BACK</Text>
+            <Text style={{ color: C.gold, fontSize: 14, fontWeight: 'bold', fontFamily: 'monospace' }}>{t('back')}</Text>
           </TouchableOpacity>
 
           <View style={{ alignItems: 'center', flex: 1, marginHorizontal: 8 }}>
@@ -515,7 +515,7 @@ export default function MyLevelsScreen() {
             ) : (
               <TouchableOpacity onPress={() => { setNameInput(gameName); setEditingName(true); }}>
                 <Text style={{ color: C.text, fontSize: 16, fontWeight: '900', fontFamily: 'monospace' }}>
-                  {gameName || 'My Game'}
+                  {gameName || t('my_game_default')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -627,14 +627,10 @@ export default function MyLevelsScreen() {
               style={{ width: '100%', height: 200, resizeMode: 'contain', backgroundColor: 'rgba(0,0,0,0.3)' }} />
             <View style={{ padding: 14, backgroundColor: 'rgba(30,10,60,0.7)' }}>
               <Text style={{ color: C.gold, fontSize: 12, fontWeight: '900', fontFamily: 'monospace', marginBottom: 4 }}>
-                HOW TO CREATE LEVELS
+                {t('how_to_create_levels')}
               </Text>
               <Text style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace', lineHeight: 16 }}>
-                1. Tap + to create a new level{'\n'}
-                2. Select a tool and tap cells to place pegs{'\n'}
-                3. Add at least 1 SKR (gold) peg{'\n'}
-                4. Test your level with PLAY TEST{'\n'}
-                5. Publish to share with the community
+                {t('create_levels_steps')}
               </Text>
             </View>
           </View>
@@ -685,14 +681,14 @@ export default function MyLevelsScreen() {
             </View>
             <LinearGradient colors={['rgba(20,8,40,0.97)','rgba(10,0,60,0.99)']} style={{ padding: 28 }}>
               <Text style={{ color: '#FFE600', fontSize: 22, fontWeight: '900', fontFamily: 'monospace', letterSpacing: 2, textAlign: 'center', marginBottom: 4 }}>
-                ✏️  EDIT MODE
+                ✏️  {t('new_game_title')}
               </Text>
               <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontFamily: 'monospace', textAlign: 'center', marginBottom: 20 }}>
-                Name your new level
+                {t('new_game_sub')}
               </Text>
               <TextInput
                 value={newName} onChangeText={setNewName}
-                placeholder="e.g. Sky Castle, Neon Drop..." placeholderTextColor="rgba(255,255,255,0.35)"
+                placeholder={t('new_game_placeholder')} placeholderTextColor="rgba(255,255,255,0.35)"
                 autoFocus maxLength={30}
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.10)', borderRadius: 16, padding: 16,
@@ -703,12 +699,12 @@ export default function MyLevelsScreen() {
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <TouchableOpacity onPress={() => { playBack(); setShowNew(false); setNewName(''); }}
                   style={{ flex: 1, padding: 15, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.20)' }}>
-                  <Text style={{ color: 'rgba(255,255,255,0.55)', fontWeight: '900', fontFamily: 'monospace', fontSize: 13 }}>CANCEL</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.55)', fontWeight: '900', fontFamily: 'monospace', fontSize: 13 }}>{t('cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => { playStart(); createLevel(); }}
                   style={{ flex: 2, borderRadius: 16, overflow: 'hidden' }}>
                   <LinearGradient colors={['#FFE600','#FF8C00']} start={{x:0,y:0}} end={{x:1,y:0}} style={{ padding: 15, alignItems: 'center' }}>
-                    <Text style={{ color: '#000', fontWeight: '900', fontFamily: 'monospace', fontSize: 15, letterSpacing: 1 }}>CREATE  →</Text>
+                    <Text style={{ color: '#000', fontWeight: '900', fontFamily: 'monospace', fontSize: 15, letterSpacing: 1 }}>{t('create')}  →</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
