@@ -924,6 +924,21 @@ export default function TestPlayScreen() {
         saveReplayIfChallenge(); saveAmazingReplay();
         if(aiModeRef.current) logAIResult();
       } else if(ballsRef.current<=0){
+        // AI multi-level: if more levels remain, advance even on ball-out
+        if(aiModeRef.current&&aiLevelsPackRef.current.length>1&&aiLevelIndexRef.current<aiLevelsPackRef.current.length-1){
+          aiLevelIndexRef.current++;
+          setAiLevelLabel(`LEVEL ${aiLevelIndexRef.current+1} / ${aiLevelsPackRef.current.length}`);
+          setTimeout(()=>setAiLevelLabel(null),2500);
+          stopFeverMusic(); setLastSkrHitUI(false);
+          setTimeout(()=>{
+            loadNextAILevel();
+            const wasAI=aiTurnRef.current;
+            aiTurnRef.current=!wasAI; aiTurnSV.value=!wasAI; setAiTurn(!wasAI);
+            if(!wasAI){ setTurnLabel(t('ai_turn')); setTimeout(()=>setTurnLabel(null),1500); setTimeout(()=>aiShoot(),2000); }
+            else { setTurnLabel(t('your_turn')); setTimeout(()=>setTurnLabel(null),1500); }
+          },1500);
+          return;
+        }
         setGameOver(true); stopFeverMusic();
         saveReplayIfChallenge(); saveAmazingReplay();
         if(aiModeRef.current) logAIResult();
@@ -1893,9 +1908,9 @@ export default function TestPlayScreen() {
                   <Text style={{color:'#FF4500',fontSize:22,fontWeight:'900',fontFamily:'monospace'}}>{aiScore.toLocaleString()}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={{width:'100%',borderRadius:12,overflow:'hidden'}} onPress={()=>router.back()}>
-                <LinearGradient colors={playerScore>=aiScore?['#FFD700','#FF9500']:['#6B7280','#4B5563']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
-                  <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:15}}>{t('exit')}</Text>
+              <TouchableOpacity style={{width:'100%',borderRadius:16,overflow:'hidden',marginTop:4,shadowColor:playerScore>=aiScore?'#FFD700':'#9945FF',shadowOffset:{width:0,height:4},shadowOpacity:0.5,shadowRadius:12,elevation:8}} onPress={()=>router.back()}>
+                <LinearGradient colors={playerScore>=aiScore?['#FFD700','#FF9500','#FF6B00']:['#9945FF','#6A1FC2']} start={{x:0,y:0}} end={{x:1,y:0}} style={{paddingVertical:16,alignItems:'center',borderRadius:16,flexDirection:'row',justifyContent:'center',gap:8}}>
+                  <Text style={{color:playerScore>=aiScore?'#000':'#FFF',fontWeight:'900',fontFamily:'monospace',fontSize:16,letterSpacing:1}}>{playerScore>=aiScore?'🏆  '+t('exit'):'  '+t('exit')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </>
