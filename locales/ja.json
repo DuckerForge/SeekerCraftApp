@@ -17,7 +17,6 @@
   "tagline": "撃て · 作れ · 制覇せよ",
   "copyright": "© 2025 DuckerForge · SeekerCraft",
   "terms_privacy": "利用規約 · プライバシーポリシー",
-
   "play_now": "今すぐプレイ",
   "play_now_sub": "コミュニティレベルを探す →",
   "edit_mode": "エディットモード",
@@ -27,7 +26,6 @@
   "pvp": "PVP",
   "vs_ai": "VS AI",
   "profile": "プロフィール",
-
   "stat_pts": "PTS",
   "stat_wins": "勝利",
   "stat_medals": "メダル",
@@ -37,7 +35,6 @@
   "my_levels_count": "マイレベル ({{count}})",
   "levels_count": "{{count}} レベル",
   "published": "公開済み",
-
   "new_game_title": "エディットモード",
   "new_game_sub": "新しいレベルに名前をつけよう",
   "new_game_placeholder": "例: スカイキャッスル、ネオンドロップ...",
@@ -49,7 +46,6 @@
   "delete_level_msg": "「{{name}}」を削除しますか？",
   "no_levels_title": "レベルがありません！",
   "no_levels_msg": "最初のレベルを作りましょう。",
-
   "activity_joined": "{{name}} が SeekerCraft に参加しました",
   "activity_beat": "{{name}} が「{{detail}}」をクリアしました",
   "activity_unlocked": "{{name}} が解除: {{detail}}",
@@ -60,19 +56,16 @@
   "activity_beat_ai": "{{name}} がAIに勝利！ {{detail}}",
   "activity_lost_ai": "{{name}} がAIに敗北 {{detail}}",
   "activity_playing": "{{name}} がプレイ中！",
-
   "time_just_now": "たった今",
   "time_m_ago": "{{n}}分前",
   "time_h_ago": "{{n}}時間前",
   "time_d_ago": "{{n}}日前",
-
   "welcome_tip_1": "ボールを撃って — 全てのゴールド SKR ペグに当てれば勝利！",
   "welcome_tip_2": "動くバケツをキャッチ ＝ ボーナスボール獲得",
   "welcome_tip_3": "レベルを公開してみんなに遊んでもらおう",
   "welcome_tip_4": "グローバルリーダーボードを登ってメダルを獲得しよう",
   "welcome_tip_5": "プレイヤーに1対1のデュエルを挑もう",
   "welcome_button": "はじめよう！",
-
   "connecting": "接続中...",
   "connect_wallet": "ウォレットを接続",
   "supported_wallets": "Phantom · Solflare · Backpack · WalletConnect",
@@ -85,26 +78,22 @@
   "i_agree": "同意する",
   "privacy_title": "プライバシーポリシー",
   "terms_title": "利用規約",
-
   "tab_stats": "📊 統計",
   "tab_badges": "🏅 バッジ",
   "tab_trophies": "🏆 トロフィー",
   "tab_wallet": "💳 ウォレット",
   "tab_privacy": "🔒 プライバシー",
-
   "tap_to_edit": "タップして名前を編集 ✏️",
   "enter_name": "名前を入力...",
   "name_updated_title": "名前を更新しました",
   "name_updated_msg": "表示名が更新されました！",
   "update_name_error": "名前を更新できませんでした",
   "connect_wallet_first": "まずウォレットを接続してください",
-
   "total_score": "合計スコア",
   "levels_played": "プレイしたレベル",
   "completed": "クリア済み",
   "created": "作成済み",
   "time_played": "プレイ時間",
-
   "achievements": "アチーブメント",
   "achievement_progress": "アチーブメント進捗",
   "pct_complete": "{{pct}}% 達成 — 続けよう！ 🚀",
@@ -119,7 +108,6 @@
   "payment_failed_title": "支払い失敗",
   "payment_failed_msg": "トランザクションが拒否されました",
   "payment_error": "支払いを処理できませんでした",
-
   "connected_wallet": "接続済みウォレット",
   "disconnect_wallet": "ウォレットを切断",
   "disconnect_title": "切断しますか？",
@@ -130,7 +118,6 @@
   "leaderboard": "リーダーボード",
   "community_maps": "コミュニティマップ",
   "credits": "クレジット",
-
   "duel_rank": "デュエルランク",
   "rank_legend": "レジェンド",
   "rank_master": "マスター",
@@ -145,7 +132,6 @@
   "goal_play_n": "{{n}} レベルをプレイ",
   "goal_win_n": "{{n}} レベルに勝利",
   "goal_reach_score": "合計スコア {{n}} に到達",
-
   "filter_all": "すべて",
   "filter_player": "プレイヤー",
   "filter_score": "スコア",
@@ -154,7 +140,6 @@
   "filter_donation": "寄付",
   "filter_social": "ソーシャル",
   "filter_special": "スペシャル",
-
   "saved": "保存しました！",
   "level_saved": "レベルをローカルに保存しました",
   "save_error": "レベルの保存に失敗しました",
@@ -182,7 +167,6 @@
   "bucket_classic": "クラシック",
   "bucket_energy": "エナジー",
   "bucket_lava": "ラバ",
-
   "element_erase": "消しゴム",
   "element_erase_desc": "セルのエレメントを消去。セルをタップして削除します。",
   "element_btc": "BTC",
@@ -207,7 +191,6 @@
   "element_track_desc": "トラックレール – AをタップしてBをタップ。下のスライダーで回転。",
   "element_bucket": "バケット",
   "element_bucket_desc": "フリーボールバケット – タップしてレベルのバケットスタイルを選択。",
-
   "tut_step_1_title": "ツールを選択",
   "tut_step_1_desc": "上部のツールバーからペグの種類を選んでください。各タイプに異なる効果があります！",
   "tut_step_2_title": "セルをタップ",
@@ -219,7 +202,6 @@
   "tut_next": "次へ →",
   "tut_got_it": "了解！",
   "privacy_body": "SeekerCraftはプライバシーを尊重します。\n\n収集情報\n• ウォレットアドレス（公開鍵のみ）\n• ゲームスコア、実績、作成レベル\n• プレイ回数と評価\n\n使用目的\nウォレットアドレスはランキングの一意識別子として使用。データの第三者販売は行いません。\n\nデータ保管\nGoogle Firebase（米国）に安全保管。ブロックチェーン取引は公開情報です。\n\nあなたの権利\nウォレットタブからいつでも切断可能。\n\nセキュリティ\n秘密鍵へのアクセスは一切ありません。全Solana取引はウォレットアプリで署名。\n\n連絡先\n質問: X (@SeekerCraftApp)。\n\n最終更新: 2026年2月",
-
   "levels_label": "{{count}} レベル",
   "level_n": "レベル {{n}}",
   "edit": "編集",
@@ -236,8 +218,8 @@
   "update_published": "公開ゲームを更新",
   "updating": "更新中...",
   "publish_confirm_title": "コミュニティに公開",
-  "publish_confirm_msg": "費用: 約{{sol}} SOL (${{usd}})\n\n公開すると、プレイヤーが寄付できます！\n寄付の90%があなたに届きます。",
-  "publish_pay": "{{sol}} SOL を支払う",
+  "publish_confirm_msg": "Cost: ~{{sol}} SKR (${{usd}})\n\nOnce published, players can donate!\nYou earn 90% of all donations.",
+  "publish_pay": "PAY {{sol}} SKR",
   "publish_success_title": "公開完了！ 🎉",
   "publish_success_msg": "あなたのゲームが SeekerCraft で公開されました！",
   "publish_error": "公開に失敗しました",
@@ -260,7 +242,6 @@
   "delete_level_confirm": "レベルを削除しますか？",
   "delete_level_sure": "本当によろしいですか？",
   "delete_btn": "削除",
-
   "game_not_found": "ゲームが見つかりません",
   "game_progress": "ゲーム進捗",
   "current": "現在",
@@ -301,7 +282,6 @@
   "donation_90_creator": "90%がクリエイターへ · 10%が開発者へ",
   "donation_90_player": "90%がプレイヤーへ · 10%が開発者へ",
   "custom_skr_amount": "カスタム SKR 金額",
-
   "test": "テスト",
   "skr_left": "残り SKR",
   "rst": "RST",
@@ -338,7 +318,6 @@
   "plus_ball": "+1 ボール",
   "last_skr": "⚡ ラスト SKR！",
   "ready_popup": "{{label}} 準備完了！",
-
   "play_vs_ai": "AI と対戦",
   "vs_ai_desc": "コミュニティレベルでAIに挑戦！\n交互にシュートして、最高スコアで勝利。",
   "difficulty": "難易度",
@@ -351,7 +330,6 @@
   "select_level": "レベルを選択",
   "no_community_levels": "コミュニティレベルが見つかりません",
   "levels_available": "{{count}} レベル利用可能 · タップして開始",
-
   "no_rankings": "ランキングがまだありません。ゲームをプレイしよう！",
   "your_duel_record": "あなたのデュエル戦績",
   "incoming_challenges": "受信チャレンジ",
@@ -390,11 +368,9 @@
   "duel": "デュエル",
   "donate_to": "{{name}} に寄付",
   "failed": "失敗",
-
   "achievement_unlocked_label": "アチーブメント解除",
   "new_achievement": "新しいアチーブメント",
   "unlock_pay": "$0.50 で解除",
-
   "day_n": "{{n}}日目",
   "daily_checkin": "デイリーチェックインストリーク",
   "day_milestone": "{{n}}日目: +{{pts}}",
@@ -402,7 +378,6 @@
   "next_day_bonus": "{{n}}日目: +{{pts}} PTS ボーナス！",
   "come_back_tomorrow": "明日また来てね！",
   "claim_reward": "報酬を受け取る",
-
   "ball_skin_title": "ボールスキン",
   "choose_style": "スタイルを選ぼう",
   "equipped": "装備中",
@@ -418,9 +393,30 @@
   "skin_fire_desc": "灼熱",
   "skin_rainbow": "レインボー",
   "skin_rainbow_desc": "華やか",
-
   "games_tab": "ゲーム",
   "players_tab": "プレイヤー",
   "tab_leaderboard": "リーダーボード",
-  "tab_duels": "デュエル"
+  "tab_duels": "デュエル",
+  "game_tut_howto": "遊び方",
+  "game_tut_goal": "目標",
+  "game_tut_pegs": "ペグ",
+  "game_tut_step1": "ドラッグで狙い、離して発射。",
+  "game_tut_step2": "ペグを叩いて得点。ヒットしたペグは消える。",
+  "game_tut_step3": "底のバケツでボールをキャッチしてボーナスボール獲得。",
+  "game_tut_step4": "SOLペグでパワーアップ発動。",
+  "game_tut_step5": "コンボで得点倍増。",
+  "game_tut_goal_title": "全SKRペグを叩け",
+  "game_tut_goal_desc": "黒いSKRペグを全て消してクリア。ボールが尽きたらゲームオーバー！",
+  "game_tut_scoring_title": "スコア",
+  "game_tut_scoring_values": "SKR +500点  •  BTC +100点  •  SOL +25点  •  コンボで倍率アップ",
+  "game_tut_skr_name": "SKR — 必須",
+  "game_tut_skr_desc": "全て叩いて勝利。+500点ずつ。",
+  "game_tut_btc_name": "BTC — ボーナス",
+  "game_tut_btc_desc": "任意のボーナスペグ。+100点ずつ。",
+  "game_tut_sol_name": "SOL — パワーアップ",
+  "game_tut_sol_desc": "30%でマルチボール/ファイアボール/スローバケツ。+25点。",
+  "game_tut_bumper_name": "スター — バンパー",
+  "game_tut_bumper_desc": "強力バウンス、消えない。",
+  "game_tut_vortex_name": "ボルテックス",
+  "game_tut_vortex_desc": "ボールを捉えてランダム方向へ。"
 }

@@ -37,26 +37,43 @@ export const ACHIEVEMENT_FEE_USD = 0.50
 let _skrPriceCache: { price: number; at: number } | null = null
 let _solPriceCache: { price: number; at: number } | null = null
 
+const FALLBACK_SKR_PRICE = 0.025
+const isSaneSKRPrice = (p: any): p is number =>
+  typeof p === 'number' && isFinite(p) && p > 0.00001 && p < 10000
+
 export const getSKRPriceUSD = async (): Promise<number> => {
   if (_skrPriceCache && Date.now() - _skrPriceCache.at < 60_000) return _skrPriceCache.price
+  // Jupiter first — native Solana, reliable
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=seeker&vs_currencies=usd')
+    const r = await fetch(`https://api.jup.ag/price/v2?ids=${SKR_MINT.toString()}`)
     const d = await r.json()
-    const price = d?.seeker?.usd ?? 0.02
-    _skrPriceCache = { price, at: Date.now() }
-    return price
-  } catch { return _skrPriceCache?.price ?? 0.02 }
+    const p = parseFloat(d?.data?.[SKR_MINT.toString()]?.price)
+    if (isSaneSKRPrice(p)) { _skrPriceCache = { price: p, at: Date.now() }; return p }
+  } catch {}
+  return isSaneSKRPrice(_skrPriceCache?.price) ? _skrPriceCache!.price : FALLBACK_SKR_PRICE
 }
+
+const FALLBACK_SOL_PRICE = 150 // sane default if all APIs fail
+const isSanePrice = (p: any): p is number =>
+  typeof p === 'number' && isFinite(p) && p > 5 && p < 100_000
 
 export const getSOLPriceUSD = async (): Promise<number> => {
   if (_solPriceCache && Date.now() - _solPriceCache.at < 60_000) return _solPriceCache.price
+  // Jupiter — most reliable for Solana ecosystem
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
+    const r = await fetch('https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112')
     const d = await r.json()
-    const price = d?.solana?.usd ?? 150
-    _solPriceCache = { price, at: Date.now() }
-    return price
-  } catch { return _solPriceCache?.price ?? 150 }
+    const p = parseFloat(d?.data?.['So11111111111111111111111111111111111111112']?.price)
+    if (isSanePrice(p)) { _solPriceCache = { price: p, at: Date.now() }; return p }
+  } catch {}
+  // fallback: CoinGecko
+  try {
+    const r2 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
+    const d2 = await r2.json()
+    const p2 = d2?.solana?.usd
+    if (isSanePrice(p2)) { _solPriceCache = { price: p2, at: Date.now() }; return p2 }
+  } catch {}
+  return isSanePrice(_solPriceCache?.price) ? _solPriceCache!.price : FALLBACK_SOL_PRICE
 }
 
 // ─── DEVICE FINGERPRINT ───────────────────────────────────────────────────────
@@ -107,8 +124,12 @@ const doSOLPayment = async (
   splits: { wallet: PublicKey; percent: number }[],
 ): Promise<{ txSig: string; solPaid: number }> => {
   const solPrice = await getSOLPriceUSD()
+  if (!isSanePrice(solPrice)) throw new Error(`Bad SOL price: ${solPrice}`)
   const totalSOL = usdAmount / solPrice
   const totalLamports = Math.floor(totalSOL * LAMPORTS_PER_SOL)
+  // sanity: min 1000 lamports (~$0.00015 at $150/SOL) — catches unit errors before signing
+  if (!isFinite(totalLamports) || totalLamports < 1000)
+    throw new Error(`Computed lamports too low: ${totalLamports} (SOL price was $${solPrice})`)
 
   const connection = new Connection(HELIUS_RPC, 'confirmed')
   let txSig = ''
@@ -155,16 +176,50 @@ const doSOLPayment = async (
   return { txSig, solPaid: totalSOL }
 }
 
-// ─── PUBLISH FEE ($0.25 USD → 90% dev, 10% pool) ─────────────────────────────
+// ─── PUBLISH FEE (~$0.25 in SKR → dev wallet) ────────────────────────────────
+// SKR token transfer — amount computed dynamically from price
 export const payPublishFee = async (userWallet: string): Promise<PaymentResult> => {
+  let txSig = ''
   try {
-    const { txSig, solPaid } = await doSOLPayment(PUBLISH_FEE_USD, [
-      { wallet: DEV_WALLET,  percent: 0.90 },
-      { wallet: POOL_WALLET, percent: 0.10 },
-    ])
-    return { success: true, txSignature: txSig, usdAmount: PUBLISH_FEE_USD, solAmount: solPaid }
+    const skrPrice = await getSKRPriceUSD()
+    const skrAmount = PUBLISH_FEE_USD / skrPrice          // e.g. 0.25 / 0.025 = 10 SKR
+    const skrLamports = Math.floor(skrAmount * (10 ** SKR_DECIMALS))
+    if (skrLamports <= 0) throw new Error(`Bad SKR amount: ${skrAmount} (price $${skrPrice})`)
+
+    const connection = new Connection(HELIUS_RPC, 'confirmed')
+
+    await transact(async (wallet: Web3MobileWallet) => {
+      const auth = await wallet.authorize({ cluster: CLUSTER, identity: { name: 'SeekerCraft', uri: 'https://seekercraft.xyz' } })
+      const addrBytes = Buffer.from(auth.accounts[0].address, 'base64')
+      const owner = new PublicKey(bs58.encode(addrBytes))
+
+      const senderATA = await getAssociatedTokenAddress(SKR_MINT, owner)
+      try {
+        const acct = await getAccount(connection, senderATA)
+        if (Number(acct.amount) < skrLamports)
+          throw new Error(`Insufficient SKR. Need ${skrAmount.toFixed(2)} SKR, have ${(Number(acct.amount) / (10 ** SKR_DECIMALS)).toFixed(2)} SKR`)
+      } catch (e: any) {
+        if (e.message?.includes('Insufficient')) throw e
+        throw new Error('No SKR token account. Buy SKR first.')
+      }
+
+      const devATA = await getAssociatedTokenAddress(SKR_MINT, DEV_WALLET)
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
+      const tx = new Transaction({ feePayer: owner, blockhash, lastValidBlockHeight })
+      tx.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 50000 }))
+      try { await getAccount(connection, devATA) } catch {
+        tx.add(createAssociatedTokenAccountInstruction(owner, devATA, DEV_WALLET, SKR_MINT))
+      }
+      tx.add(createTransferInstruction(senderATA, devATA, owner, skrLamports))
+
+      const [signed] = await wallet.signTransactions({ transactions: [tx] })
+      txSig = await connection.sendRawTransaction((signed as Transaction).serialize(), { skipPreflight: false })
+      await connection.confirmTransaction({ signature: txSig, blockhash, lastValidBlockHeight }, 'confirmed')
+    })
+
+    return { success: true, txSignature: txSig, usdAmount: PUBLISH_FEE_USD, skrAmount }
   } catch (err: any) {
-    return { success: false, error: err.message || 'Payment failed' }
+    return { success: false, error: err.message || 'SKR payment failed' }
   }
 }
 

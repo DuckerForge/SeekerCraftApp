@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Image } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 const C = {
   bg1:'#0B0033', bg2:'#1A0066',
@@ -15,19 +16,19 @@ interface Props { visible: boolean; onClose: () => void; }
 
 export default function Tutorial({ visible, onClose }: Props) {
   const [tab, setTab] = useState<'howto'|'goal'|'pegs'>('howto');
+  const { t } = useTranslation();
 
   return (
     <Modal visible={visible} transparent animationType="slide">
     <View style={st.overlay}>
     <View style={st.card}>
 
-    {/* TABS */}
     <View style={st.tabs}>
-    {(['howto','goal','pegs'] as const).map(t => (
-      <TouchableOpacity key={t} onPress={() => { setTab(t); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
-        style={[st.tab, tab===t && st.tabActive]}>
-        <Text style={[st.tabText, tab===t && st.tabTextActive]}>
-          {t==='howto' ? 'HOW TO PLAY' : t==='goal' ? 'GOAL' : 'PEGS'}
+    {(['howto','goal','pegs'] as const).map(k => (
+      <TouchableOpacity key={k} onPress={() => { setTab(k); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+        style={[st.tab, tab===k && st.tabActive]}>
+        <Text style={[st.tabText, tab===k && st.tabTextActive]}>
+          {k==='howto' ? t('game_tut_howto') : k==='goal' ? t('game_tut_goal') : t('game_tut_pegs')}
         </Text>
       </TouchableOpacity>
     ))}
@@ -37,23 +38,23 @@ export default function Tutorial({ visible, onClose }: Props) {
 
     {tab === 'howto' && (
       <View style={st.section}>
-      <View style={st.row}><Text style={st.bullet}>1.</Text><Text style={st.bodyText}>Drag to aim, release to shoot the ball.</Text></View>
-      <View style={st.row}><Text style={st.bullet}>2.</Text><Text style={st.bodyText}>Hit pegs to score points. Hit-pegs disappear after each ball.</Text></View>
-      <View style={st.row}><Text style={st.bullet}>3.</Text><Text style={st.bodyText}>Catch the ball in the moving bucket at the bottom to earn a free ball.</Text></View>
-      <View style={st.row}><Text style={st.bullet}>4.</Text><Text style={st.bodyText}>Hit SOL pegs for a chance to activate power-ups.</Text></View>
-      <View style={st.row}><Text style={st.bullet}>5.</Text><Text style={st.bodyText}>Build combos by hitting many pegs in one shot for bonus points.</Text></View>
+      <View style={st.row}><Text style={st.bullet}>1.</Text><Text style={st.bodyText}>{t('game_tut_step1')}</Text></View>
+      <View style={st.row}><Text style={st.bullet}>2.</Text><Text style={st.bodyText}>{t('game_tut_step2')}</Text></View>
+      <View style={st.row}><Text style={st.bullet}>3.</Text><Text style={st.bodyText}>{t('game_tut_step3')}</Text></View>
+      <View style={st.row}><Text style={st.bullet}>4.</Text><Text style={st.bodyText}>{t('game_tut_step4')}</Text></View>
+      <View style={st.row}><Text style={st.bullet}>5.</Text><Text style={st.bodyText}>{t('game_tut_step5')}</Text></View>
       </View>
     )}
 
     {tab === 'goal' && (
       <View style={st.section}>
       <View style={st.goalBox}>
-        <Text style={st.goalTitle}>HIT ALL SKR PEGS</Text>
-        <Text style={st.goalSub}>Clear every black SKR peg to complete the level. Run out of balls before hitting all SKR pegs and it's game over!</Text>
+        <Text style={st.goalTitle}>{t('game_tut_goal_title')}</Text>
+        <Text style={st.goalSub}>{t('game_tut_goal_desc')}</Text>
       </View>
       <View style={[st.goalBox, {borderColor: C.gold+'60', marginTop:12}]}>
-        <Text style={[st.goalTitle, {color:C.gold}]}>SCORING</Text>
-        <Text style={st.goalSub}>SKR +50 pts  •  BTC +25 pts  •  SOL +10 pts  •  Combos multiply your score</Text>
+        <Text style={[st.goalTitle, {color:C.gold}]}>{t('game_tut_scoring_title')}</Text>
+        <Text style={st.goalSub}>{t('game_tut_scoring_values')}</Text>
       </View>
       </View>
     )}
@@ -63,36 +64,36 @@ export default function Tutorial({ visible, onClose }: Props) {
       <View style={st.pegRow}>
         <Image source={require('../assets/images/Peg/skr.png')} style={st.pegIcon}/>
         <View style={st.pegInfo}>
-          <Text style={[st.pegName, {color:C.gold}]}>SKR — REQUIRED</Text>
-          <Text style={st.pegDesc}>Hit ALL of these to win. +50 pts each.</Text>
+          <Text style={[st.pegName, {color:'#888'}]}>{t('game_tut_skr_name')}</Text>
+          <Text style={st.pegDesc}>{t('game_tut_skr_desc')}</Text>
         </View>
       </View>
       <View style={st.pegRow}>
         <Image source={require('../assets/images/Peg/btc.png')} style={st.pegIcon}/>
         <View style={st.pegInfo}>
-          <Text style={[st.pegName, {color:C.orange}]}>BTC — BONUS</Text>
-          <Text style={st.pegDesc}>Optional bonus pegs. +25 pts each.</Text>
+          <Text style={[st.pegName, {color:C.orange}]}>{t('game_tut_btc_name')}</Text>
+          <Text style={st.pegDesc}>{t('game_tut_btc_desc')}</Text>
         </View>
       </View>
       <View style={st.pegRow}>
         <Image source={require('../assets/images/Peg/sol.png')} style={st.pegIcon}/>
         <View style={st.pegInfo}>
-          <Text style={[st.pegName, {color:C.blue}]}>SOL — POWER-UP</Text>
-          <Text style={st.pegDesc}>30% chance to trigger Multiball, Fireball or Slow Bucket. +10 pts.</Text>
+          <Text style={[st.pegName, {color:C.blue}]}>{t('game_tut_sol_name')}</Text>
+          <Text style={st.pegDesc}>{t('game_tut_sol_desc')}</Text>
         </View>
       </View>
       <View style={st.pegRow}>
         <Image source={require('../assets/images/Peg/bump.png')} style={st.pegIcon}/>
         <View style={st.pegInfo}>
-          <Text style={[st.pegName, {color:C.green}]}>STAR — BUMPER</Text>
-          <Text style={st.pegDesc}>Powerful bounce, never disappears. Always active.</Text>
+          <Text style={[st.pegName, {color:C.green}]}>{t('game_tut_bumper_name')}</Text>
+          <Text style={st.pegDesc}>{t('game_tut_bumper_desc')}</Text>
         </View>
       </View>
       <View style={st.pegRow}>
         <Image source={require('../assets/images/Peg/curva.png')} style={st.pegIcon}/>
         <View style={st.pegInfo}>
-          <Text style={[st.pegName, {color:'#AA00FF'}]}>VORTEX</Text>
-          <Text style={st.pegDesc}>Captures the ball and launches it in a random direction.</Text>
+          <Text style={[st.pegName, {color:'#AA00FF'}]}>{t('game_tut_vortex_name')}</Text>
+          <Text style={st.pegDesc}>{t('game_tut_vortex_desc')}</Text>
         </View>
       </View>
       </View>
@@ -100,9 +101,8 @@ export default function Tutorial({ visible, onClose }: Props) {
 
     </ScrollView>
 
-    {/* CLOSE */}
     <TouchableOpacity onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); try{(global as any).showAchievement?.('tutorial_done');}catch{} onClose(); }} style={st.okBtn}>
-      <Text style={st.okText}>OK</Text>
+      <Text style={st.okText}>{t('ok')}</Text>
     </TouchableOpacity>
 
     </View>

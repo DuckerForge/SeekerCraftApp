@@ -93,11 +93,18 @@ export default function RankingsScreen(){
   };
   useEffect(()=>{loadData();getSKRPriceUSD().then(p=>{if(p)setSkrPrice(p);}).catch(()=>{});},[]);
   useFocusEffect(useCallback(()=>{loadData();},[user?.walletAddress]));
-  const onRefresh=()=>{setRefreshing(true);loadData();};
+  // drain badge: mark all unseen notifications seen when duels tab is open
+  useEffect(()=>{
+    if(tab!=='duels'||!user?.walletAddress) return;
+    getChallengeNotifications(user.walletAddress)
+      .then(notifs=>notifs.forEach(n=>markChallengeNotificationSeen(user.walletAddress,n.id)))
+      .catch(()=>{});
+  },[tab,user?.walletAddress]);
+  const onRefresh=()=>{setRefreshing(true);loadData()};
 
   const startChallenge=async(targetWallet:string,targetName:string)=>{
-    if(!user?.walletAddress){Alert.alert('Connect wallet first');return;}
-    if(targetWallet===user.walletAddress){Alert.alert("Can't challenge yourself!");return;}
+    if(!user?.walletAddress){Alert.alert(t('connect_wallet_first'));return;}
+    if(targetWallet===user.walletAddress){Alert.alert(t('cant_challenge_self'));return;}
     challengeTargetRef.current={wallet:targetWallet,name:targetName};
     try{
       const games=await getPublicGames();
@@ -134,7 +141,7 @@ export default function RankingsScreen(){
 
   const handleAcceptChallenge=async(ch:any)=>{
     try{
-      await acceptChallenge(ch.id);
+      await acceptChallenge(ch.id, user!.walletAddress);
       await AsyncStorage.setItem('community_game',JSON.stringify({id:ch.gameId,name:ch.gameName,levels:[]}));
       await AsyncStorage.setItem('community_game_id',ch.gameId);
       await AsyncStorage.setItem('active_challenge_id',ch.id);
@@ -145,7 +152,7 @@ export default function RankingsScreen(){
   const handleDecline=async(ch:any)=>{
     Alert.alert('Decline Challenge?','Decline this duel?',[
       {text:'Cancel',style:'cancel'},
-      {text:'Decline',style:'destructive',onPress:async()=>{try{await declineChallenge(ch.id);await loadData();}catch{}}},
+      {text:'Decline',style:'destructive',onPress:async()=>{try{await declineChallenge(ch.id,user!.walletAddress);await loadData();}catch{}}},
     ]);
   };
 

@@ -17,7 +17,6 @@
   "tagline": "SCHIESSEN · BAUEN · EROBERN",
   "copyright": "© 2025 DuckerForge · SeekerCraft",
   "terms_privacy": "Nutzungsbedingungen · Datenschutzrichtlinie",
-
   "play_now": "JETZT SPIELEN",
   "play_now_sub": "Community-Level durchstöbern →",
   "edit_mode": "EDITOR-MODUS",
@@ -27,7 +26,6 @@
   "pvp": "PVP",
   "vs_ai": "GEGEN KI",
   "profile": "PROFIL",
-
   "stat_pts": "PKT",
   "stat_wins": "SIEGE",
   "stat_medals": "MEDAILLEN",
@@ -37,7 +35,6 @@
   "my_levels_count": "MEINE LEVEL ({{count}})",
   "levels_count": "{{count}} Level",
   "published": "Veröffentlicht",
-
   "new_game_title": "EDITOR-MODUS",
   "new_game_sub": "Benenne dein neues Level",
   "new_game_placeholder": "z.B. Himmelsburg, Neon-Tropfen...",
@@ -49,7 +46,6 @@
   "delete_level_msg": "\"{{name}}\" löschen?",
   "no_levels_title": "Noch keine Level!",
   "no_levels_msg": "Erstelle dein erstes Level.",
-
   "activity_joined": "{{name}} ist SeekerCraft beigetreten",
   "activity_beat": "{{name}} hat \"{{detail}}\" geschafft",
   "activity_unlocked": "{{name}} hat freigeschaltet: {{detail}}",
@@ -60,19 +56,16 @@
   "activity_beat_ai": "{{name}} hat die KI besiegt! {{detail}}",
   "activity_lost_ai": "{{name}} hat gegen KI {{detail}} verloren",
   "activity_playing": "{{name}} spielt gerade!",
-
   "time_just_now": "gerade eben",
   "time_m_ago": "vor {{n}}min",
   "time_h_ago": "vor {{n}}h",
   "time_d_ago": "vor {{n}}T",
-
   "welcome_tip_1": "Schieß den Ball — triff ALLE goldenen SKR-Pegs zum GEWINNEN!",
   "welcome_tip_2": "Fang den beweglichen Eimer = gratis Bonusball",
   "welcome_tip_3": "Veröffentliche deine Level für alle zum Spielen",
   "welcome_tip_4": "Steige in der globalen Bestenliste auf & verdiene Medaillen",
   "welcome_tip_5": "Fordere Spieler zu Kopf-an-Kopf-Duellen heraus",
   "welcome_button": "LOS GEHT'S!",
-
   "connecting": "VERBINDE...",
   "connect_wallet": "WALLET VERBINDEN",
   "supported_wallets": "Phantom · Solflare · Backpack · WalletConnect",
@@ -85,26 +78,22 @@
   "i_agree": "ICH STIMME ZU",
   "privacy_title": "DATENSCHUTZRICHTLINIE",
   "terms_title": "NUTZUNGSBEDINGUNGEN",
-
   "tab_stats": "📊 STATISTIK",
   "tab_badges": "🏅 ABZEICHEN",
   "tab_trophies": "🏆 TROPHÄEN",
   "tab_wallet": "💳 WALLET",
   "tab_privacy": "🔒 DATENSCHUTZ",
-
   "tap_to_edit": "tippe zum Bearbeiten ✏️",
   "enter_name": "Name eingeben...",
   "name_updated_title": "Name aktualisiert",
   "name_updated_msg": "Dein Anzeigename wurde aktualisiert!",
   "update_name_error": "Name konnte nicht aktualisiert werden",
   "connect_wallet_first": "Verbinde zuerst dein Wallet",
-
   "total_score": "GESAMTPUNKTZAHL",
   "levels_played": "GESPIELTE LEVEL",
   "completed": "ABGESCHLOSSEN",
   "created": "ERSTELLT",
   "time_played": "SPIELZEIT",
-
   "achievements": "ERRUNGENSCHAFTEN",
   "achievement_progress": "FORTSCHRITT",
   "pct_complete": "{{pct}}% geschafft — weiter so! 🚀",
@@ -119,7 +108,6 @@
   "payment_failed_title": "Zahlung fehlgeschlagen",
   "payment_failed_msg": "Transaktion abgelehnt",
   "payment_error": "Zahlung konnte nicht verarbeitet werden",
-
   "connected_wallet": "VERBUNDENES WALLET",
   "disconnect_wallet": "WALLET TRENNEN",
   "disconnect_title": "Trennen?",
@@ -130,7 +118,6 @@
   "leaderboard": "Bestenliste",
   "community_maps": "Community-Karten",
   "credits": "Mitwirkende",
-
   "duel_rank": "DUELL-RANG",
   "rank_legend": "LEGENDE",
   "rank_master": "MEISTER",
@@ -145,7 +132,6 @@
   "goal_play_n": "{{n}} Level spielen",
   "goal_win_n": "{{n}} Level gewinnen",
   "goal_reach_score": "{{n}} Gesamtpunktzahl erreichen",
-
   "filter_all": "alle",
   "filter_player": "Spieler",
   "filter_score": "Punkte",
@@ -154,7 +140,6 @@
   "filter_donation": "Spende",
   "filter_social": "Sozial",
   "filter_special": "Spezial",
-
   "saved": "Gespeichert!",
   "level_saved": "Level lokal gespeichert",
   "save_error": "Level konnte nicht gespeichert werden",
@@ -182,7 +167,6 @@
   "bucket_classic": "KLASSISCH",
   "bucket_energy": "ENERGIE",
   "bucket_lava": "LAVA",
-
   "element_erase": "Löschen",
   "element_erase_desc": "Element aus Zelle löschen. Tippe auf eine Zelle, um sie zu leeren.",
   "element_btc": "BTC",
@@ -207,19 +191,17 @@
   "element_track_desc": "Schiene – tippe A dann B. Mit Regler unten drehen.",
   "element_bucket": "Eimer",
   "element_bucket_desc": "Gratis-Ball-Eimer – tippe, um den Eimer-Stil für dein Level zu wählen.",
-
   "tut_step_1_title": "WERKZEUG WÄHLEN",
   "tut_step_1_desc": "Wähle einen Peg-Typ aus der Werkzeugleiste oben. Jeder Typ hat unterschiedliche Effekte!",
   "tut_step_2_title": "ZELLE ANTIPPEN",
   "tut_step_2_desc": "Tippe auf eine Zelle im Raster, um dein Werkzeug zu platzieren. Erneut tippen zum Entfernen.",
   "tut_step_3_title": "SKR PEGS HINZUFÜGEN",
-  "tut_step_3_desc": "Du brauchst mindestens 1 SKR (Gold-Peg) zum Veröffentlichen. Spieler müssen alle SKR treffen!",
+  "tut_step_3_desc": "Du brauchst mindestens 1 SKR (SKR-Peg) zum Veröffentlichen. Spieler müssen alle SKR treffen!",
   "tut_step_4_title": "LEVEL TESTEN",
   "tut_step_4_desc": "Wenn du bereit bist, tippe unten auf TEST um dein Level auszuprobieren!",
   "tut_next": "WEITER →",
   "tut_got_it": "VERSTANDEN!",
   "privacy_body": "SeekerCraft respektiert deine Privatsphäre.\n\nWAS WIR ERHEBEN\n• Wallet-Adresse (nur öffentlicher Schlüssel)\n• Spielstände, Erfolge, erstellte Level\n• Spielzahlen und Bewertungen\n\nVERWENDUNG\nDeine Wallet-Adresse dient als eindeutige Kennung für die Bestenliste. Wir verkaufen niemals deine Daten.\n\nSPEICHERUNG\nDaten werden sicher auf Google Firebase (USA) gespeichert. Blockchain-Transaktionen sind öffentlich.\n\nDEINE RECHTE\nTrenne dein Wallet jederzeit über den Wallet-Tab.\n\nSICHERHEIT\nWir haben keinen Zugang zu deinen privaten Schlüsseln. Alle Solana-Transaktionen werden von deiner Wallet-App signiert.\n\nKONTAKT\nFragen: X (@SeekerCraftApp).\n\nLetzte Aktualisierung: Februar 2026",
-
   "levels_label": "{{count}} LEVEL",
   "level_n": "LEVEL {{n}}",
   "edit": "BEARBEITEN",
@@ -236,8 +218,8 @@
   "update_published": "VERÖFFENTLICHTES SPIEL AKTUALISIEREN",
   "updating": "AKTUALISIERE...",
   "publish_confirm_title": "Für Community veröffentlichen",
-  "publish_confirm_msg": "Kosten: ~{{sol}} SOL (${{usd}})\n\nNach der Veröffentlichung können Spieler spenden!\nDu erhältst 90% aller Spenden.",
-  "publish_pay": "{{sol}} SOL ZAHLEN",
+  "publish_confirm_msg": "Cost: ~{{sol}} SKR (${{usd}})\n\nOnce published, players can donate!\nYou earn 90% of all donations.",
+  "publish_pay": "PAY {{sol}} SKR",
   "publish_success_title": "Veröffentlicht! 🎉",
   "publish_success_msg": "Dein Spiel ist jetzt live auf SeekerCraft!",
   "publish_error": "Veröffentlichung fehlgeschlagen",
@@ -260,7 +242,6 @@
   "delete_level_confirm": "Level löschen?",
   "delete_level_sure": "Bist du sicher?",
   "delete_btn": "Löschen",
-
   "game_not_found": "Spiel nicht gefunden",
   "game_progress": "SPIELFORTSCHRITT",
   "current": "AKTUELL",
@@ -301,7 +282,6 @@
   "donation_90_creator": "90% gehen an den Ersteller · 10% an Entwickler",
   "donation_90_player": "90% gehen an den Spieler · 10% an Entwickler",
   "custom_skr_amount": "Eigener SKR-Betrag",
-
   "test": "TEST",
   "skr_left": "SKR ÜBRIG",
   "rst": "NEU",
@@ -338,7 +318,6 @@
   "plus_ball": "+1 BALL",
   "last_skr": "⚡ LETZTER SKR!",
   "ready_popup": "{{label}} BEREIT!",
-
   "play_vs_ai": "GEGEN KI SPIELEN",
   "vs_ai_desc": "Fordere die KI auf einem Community-Level heraus!\nAbwechselnd schießen, höchste Punktzahl gewinnt.",
   "difficulty": "SCHWIERIGKEIT",
@@ -351,7 +330,6 @@
   "select_level": "LEVEL WÄHLEN",
   "no_community_levels": "Keine Community-Level gefunden",
   "levels_available": "{{count}} Level verfügbar · Tippe zum Starten",
-
   "no_rankings": "Noch keine Rangliste. Spiele ein paar Spiele!",
   "your_duel_record": "DEINE DUELL-BILANZ",
   "incoming_challenges": "EINGEHENDE HERAUSFORDERUNGEN",
@@ -390,11 +368,9 @@
   "duel": "DUELL",
   "donate_to": "AN {{name}} SPENDEN",
   "failed": "Fehlgeschlagen",
-
   "achievement_unlocked_label": "ERRUNGENSCHAFT FREIGESCHALTET",
   "new_achievement": "NEUE ERRUNGENSCHAFT",
   "unlock_pay": "0,50$ FREISCHALTEN",
-
   "day_n": "TAG {{n}}",
   "daily_checkin": "TÄGLICHE CHECK-IN-SERIE",
   "day_milestone": "TAG {{n}}: +{{pts}}",
@@ -402,7 +378,6 @@
   "next_day_bonus": "Tag {{n}}: +{{pts}} PKT Bonus!",
   "come_back_tomorrow": "Komm morgen wieder!",
   "claim_reward": "BELOHNUNG ABHOLEN",
-
   "ball_skin_title": "BALL-SKIN",
   "choose_style": "Wähle deinen Stil",
   "equipped": "AUSGERÜSTET",
@@ -418,9 +393,30 @@
   "skin_fire_desc": "Brennend heiß",
   "skin_rainbow": "REGENBOGEN",
   "skin_rainbow_desc": "Fabelhaft",
-
   "games_tab": "SPIELE",
   "players_tab": "SPIELER",
   "tab_leaderboard": "BESTENLISTE",
-  "tab_duels": "DUELLE"
+  "tab_duels": "DUELLE",
+  "game_tut_howto": "SO SPIELST DU",
+  "game_tut_goal": "ZIEL",
+  "game_tut_pegs": "PEGS",
+  "game_tut_step1": "Ziehen zum Zielen, loslassen zum Schießen.",
+  "game_tut_step2": "Treffe Pegs, um Punkte zu sammeln. Sie verschwinden nach dem Treffer.",
+  "game_tut_step3": "Fange den Ball im Eimer, um einen Freiball zu erhalten.",
+  "game_tut_step4": "Treffe SOL-Pegs für Power-ups.",
+  "game_tut_step5": "Bilde Combos für Bonuspunkte.",
+  "game_tut_goal_title": "ALLE SKR-PEGS TREFFEN",
+  "game_tut_goal_desc": "Eliminiere jeden schwarzen SKR-Peg. Keine Bälle mehr = Game Over!",
+  "game_tut_scoring_title": "PUNKTE",
+  "game_tut_scoring_values": "SKR +500 P  •  BTC +100 P  •  SOL +25 P  •  Combos multiplizieren",
+  "game_tut_skr_name": "SKR — PFLICHT",
+  "game_tut_skr_desc": "Triff ALLE zum Gewinnen. +500 P je.",
+  "game_tut_btc_name": "BTC — BONUS",
+  "game_tut_btc_desc": "Optionale Bonus-Pegs. +100 P je.",
+  "game_tut_sol_name": "SOL — POWER-UP",
+  "game_tut_sol_desc": "30% Chance auf Multiball, Feuerball oder Langsam-Eimer. +25 P.",
+  "game_tut_bumper_name": "STERN — BUMPER",
+  "game_tut_bumper_desc": "Starker Rückprall, verschwindet nie.",
+  "game_tut_vortex_name": "VORTEX",
+  "game_tut_vortex_desc": "Fängt den Ball und schleudert ihn zufällig."
 }

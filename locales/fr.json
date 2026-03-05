@@ -17,7 +17,6 @@
   "tagline": "TIRE · CONSTRUIS · CONQUIERS",
   "copyright": "© 2025 DuckerForge · SeekerCraft",
   "terms_privacy": "Conditions d'utilisation · Politique de confidentialité",
-
   "play_now": "JOUER",
   "play_now_sub": "Parcourir les niveaux de la communauté →",
   "edit_mode": "MODE ÉDITEUR",
@@ -27,7 +26,6 @@
   "pvp": "JCJ",
   "vs_ai": "VS IA",
   "profile": "PROFIL",
-
   "stat_pts": "PTS",
   "stat_wins": "VICTOIRES",
   "stat_medals": "MÉDAILLES",
@@ -37,7 +35,6 @@
   "my_levels_count": "MES NIVEAUX ({{count}})",
   "levels_count": "{{count}} niveaux",
   "published": "Publié",
-
   "new_game_title": "MODE ÉDITEUR",
   "new_game_sub": "Nommez votre nouveau niveau",
   "new_game_placeholder": "ex. Château Céleste, Chute Néon...",
@@ -49,7 +46,6 @@
   "delete_level_msg": "Supprimer « {{name}} » ?",
   "no_levels_title": "Aucun niveau !",
   "no_levels_msg": "Créez votre premier niveau.",
-
   "activity_joined": "{{name}} a rejoint SeekerCraft",
   "activity_beat": "{{name}} a battu « {{detail}} »",
   "activity_unlocked": "{{name}} a débloqué : {{detail}}",
@@ -60,19 +56,16 @@
   "activity_beat_ai": "{{name}} a battu l'IA ! {{detail}}",
   "activity_lost_ai": "{{name}} a perdu contre l'IA {{detail}}",
   "activity_playing": "{{name}} est en train de jouer !",
-
   "time_just_now": "à l'instant",
   "time_m_ago": "il y a {{n}}min",
   "time_h_ago": "il y a {{n}}h",
   "time_d_ago": "il y a {{n}}j",
-
   "welcome_tip_1": "Lancez la balle — touchez TOUS les pegs dorés SKR pour GAGNER !",
   "welcome_tip_2": "Attrapez le seau mobile = balle bonus gratuite",
   "welcome_tip_3": "Publiez vos niveaux pour que tout le monde puisse jouer",
   "welcome_tip_4": "Grimpez dans le classement mondial et gagnez des médailles",
   "welcome_tip_5": "Défiez d'autres joueurs en duel",
   "welcome_button": "C'EST PARTI !",
-
   "connecting": "CONNEXION...",
   "connect_wallet": "CONNECTER LE PORTEFEUILLE",
   "supported_wallets": "Phantom · Solflare · Backpack · WalletConnect",
@@ -85,26 +78,22 @@
   "i_agree": "J'ACCEPTE",
   "privacy_title": "POLITIQUE DE CONFIDENTIALITÉ",
   "terms_title": "CONDITIONS D'UTILISATION",
-
   "tab_stats": "📊 STATS",
   "tab_badges": "🏅 BADGES",
   "tab_trophies": "🏆 TROPHÉES",
   "tab_wallet": "💳 PORTEFEUILLE",
   "tab_privacy": "🔒 CONFIDENTIALITÉ",
-
   "tap_to_edit": "appuyez pour modifier le nom ✏️",
   "enter_name": "Entrez un nom...",
   "name_updated_title": "Nom mis à jour",
   "name_updated_msg": "Votre nom d'affichage a été mis à jour !",
   "update_name_error": "Impossible de mettre à jour le nom",
   "connect_wallet_first": "Connectez d'abord votre portefeuille",
-
   "total_score": "SCORE TOTAL",
   "levels_played": "NIVEAUX JOUÉS",
   "completed": "TERMINÉS",
   "created": "CRÉÉS",
   "time_played": "TEMPS DE JEU",
-
   "achievements": "SUCCÈS",
   "achievement_progress": "PROGRESSION DES SUCCÈS",
   "pct_complete": "{{pct}}% terminé — continuez ! 🚀",
@@ -119,7 +108,6 @@
   "payment_failed_title": "Paiement échoué",
   "payment_failed_msg": "Transaction rejetée",
   "payment_error": "Impossible de traiter le paiement",
-
   "connected_wallet": "PORTEFEUILLE CONNECTÉ",
   "disconnect_wallet": "DÉCONNECTER LE PORTEFEUILLE",
   "disconnect_title": "Déconnecter ?",
@@ -130,7 +118,6 @@
   "leaderboard": "Classement",
   "community_maps": "Niveaux communautaires",
   "credits": "Crédits",
-
   "duel_rank": "RANG DE DUEL",
   "rank_legend": "LÉGENDE",
   "rank_master": "MAÎTRE",
@@ -145,7 +132,6 @@
   "goal_play_n": "Jouer {{n}} niveaux",
   "goal_win_n": "Gagner {{n}} niveaux",
   "goal_reach_score": "Atteindre {{n}} de score total",
-
   "filter_all": "tout",
   "filter_player": "joueur",
   "filter_score": "score",
@@ -154,7 +140,6 @@
   "filter_donation": "don",
   "filter_social": "social",
   "filter_special": "spécial",
-
   "saved": "Sauvegardé !",
   "level_saved": "Niveau sauvegardé localement",
   "save_error": "Échec de la sauvegarde du niveau",
@@ -182,7 +167,6 @@
   "bucket_classic": "CLASSIQUE",
   "bucket_energy": "ÉNERGIE",
   "bucket_lava": "LAVE",
-
   "element_erase": "Effacer",
   "element_erase_desc": "Effacer un élément d'une cellule. Appuyez sur une cellule pour la vider.",
   "element_btc": "BTC",
@@ -207,19 +191,17 @@
   "element_track_desc": "Rail de guidage – appuyez sur A puis B. Tournez avec le curseur ci-dessous.",
   "element_bucket": "Seau",
   "element_bucket_desc": "Seau de balle gratuite – appuyez pour choisir le style de seau pour votre niveau.",
-
   "tut_step_1_title": "CHOISIR UN OUTIL",
   "tut_step_1_desc": "Choisissez un type de peg dans la barre d'outils en haut. Chaque type a des effets différents !",
   "tut_step_2_title": "TOUCHER UNE CASE",
   "tut_step_2_desc": "Touchez une case de la grille pour placer votre outil. Touchez à nouveau pour le supprimer.",
   "tut_step_3_title": "AJOUTER DES SKR",
-  "tut_step_3_desc": "Il faut au moins 1 SKR (peg doré) pour publier. Les joueurs doivent toucher tous les SKR pour gagner !",
+  "tut_step_3_desc": "Il faut au moins 1 SKR (peg SKR) pour publier. Les joueurs doivent toucher tous les SKR pour gagner !",
   "tut_step_4_title": "TESTER VOTRE NIVEAU",
   "tut_step_4_desc": "Quand vous êtes prêt, appuyez sur TEST en bas pour essayer votre niveau !",
   "tut_next": "SUIVANT →",
   "tut_got_it": "COMPRIS !",
   "privacy_body": "SeekerCraft respecte votre vie privée.\n\nCE QUE NOUS COLLECTONS\n• Adresse de portefeuille (clé publique uniquement)\n• Scores, succès, niveaux créés\n• Nombres de parties et évaluations\n\nUTILISATION\nVotre adresse est utilisée comme identifiant unique pour le classement. Nous ne vendons jamais vos données.\n\nSTOCKAGE\nDonnées stockées sur Google Firebase (USA). Les transactions blockchain sont publiques.\n\nVOS DROITS\nDéconnectez votre portefeuille à tout moment depuis l'onglet Portefeuille.\n\nSÉCURITÉ\nNous n'avons jamais accès à vos clés privées. Toutes les transactions Solana sont signées par votre application portefeuille.\n\nCONTACT\nQuestions: X (@SeekerCraftApp).\n\nDernière mise à jour: Février 2026",
-
   "levels_label": "{{count}} NIVEAUX",
   "level_n": "NIVEAU {{n}}",
   "edit": "ÉDITER",
@@ -236,8 +218,8 @@
   "update_published": "METTRE À JOUR LE JEU PUBLIÉ",
   "updating": "MISE À JOUR...",
   "publish_confirm_title": "Publier dans la communauté",
-  "publish_confirm_msg": "Coût : ~{{sol}} SOL (${{usd}})\n\nUne fois publié, les joueurs peuvent faire des dons !\nVous gagnez 90% de tous les dons.",
-  "publish_pay": "PAYER {{sol}} SOL",
+  "publish_confirm_msg": "Cost: ~{{sol}} SKR (${{usd}})\n\nOnce published, players can donate!\nYou earn 90% of all donations.",
+  "publish_pay": "PAY {{sol}} SKR",
   "publish_success_title": "Publié ! 🎉",
   "publish_success_msg": "Votre jeu est maintenant en ligne sur SeekerCraft !",
   "publish_error": "Échec de la publication",
@@ -260,7 +242,6 @@
   "delete_level_confirm": "Supprimer le niveau ?",
   "delete_level_sure": "Êtes-vous sûr ?",
   "delete_btn": "Supprimer",
-
   "game_not_found": "Jeu introuvable",
   "game_progress": "PROGRESSION DU JEU",
   "current": "ACTUEL",
@@ -301,7 +282,6 @@
   "donation_90_creator": "90% va au créateur · 10% aux développeurs",
   "donation_90_player": "90% va au joueur · 10% aux développeurs",
   "custom_skr_amount": "Montant personnalisé en SKR",
-
   "test": "TEST",
   "skr_left": "SKR RESTANTS",
   "rst": "RST",
@@ -338,7 +318,6 @@
   "plus_ball": "+1 BALLE",
   "last_skr": "⚡ DERNIER SKR !",
   "ready_popup": "{{label}} PRÊT !",
-
   "play_vs_ai": "JOUER CONTRE L'IA",
   "vs_ai_desc": "Défiez l'IA sur un niveau communautaire !\nJouez chacun votre tour, le meilleur score gagne.",
   "difficulty": "DIFFICULTÉ",
@@ -351,7 +330,6 @@
   "select_level": "CHOISIR UN NIVEAU",
   "no_community_levels": "Aucun niveau communautaire trouvé",
   "levels_available": "{{count}} niveaux disponibles · Appuyez pour commencer",
-
   "no_rankings": "Aucun classement pour l'instant. Jouez quelques parties !",
   "your_duel_record": "VOTRE BILAN DE DUELS",
   "incoming_challenges": "DÉFIS REÇUS",
@@ -390,11 +368,9 @@
   "duel": "DUEL",
   "donate_to": "DONNER À {{name}}",
   "failed": "Échoué",
-
   "achievement_unlocked_label": "SUCCÈS DÉBLOQUÉ",
   "new_achievement": "NOUVEAU SUCCÈS",
   "unlock_pay": "DÉBLOQUER 0,50 $",
-
   "day_n": "JOUR {{n}}",
   "daily_checkin": "SÉRIE DE CONNEXION QUOTIDIENNE",
   "day_milestone": "JOUR {{n}} : +{{pts}}",
@@ -402,7 +378,6 @@
   "next_day_bonus": "Jour {{n}} : +{{pts}} PTS bonus !",
   "come_back_tomorrow": "Revenez demain !",
   "claim_reward": "RÉCLAMER LA RÉCOMPENSE",
-
   "ball_skin_title": "SKIN DE BALLE",
   "choose_style": "Choisissez votre style",
   "equipped": "ÉQUIPÉ",
@@ -418,9 +393,30 @@
   "skin_fire_desc": "Brûlant",
   "skin_rainbow": "ARC-EN-CIEL",
   "skin_rainbow_desc": "Fabuleux",
-
   "games_tab": "JEUX",
   "players_tab": "JOUEURS",
   "tab_leaderboard": "CLASSEMENT",
-  "tab_duels": "DUELS"
+  "tab_duels": "DUELS",
+  "game_tut_howto": "COMMENT JOUER",
+  "game_tut_goal": "OBJECTIF",
+  "game_tut_pegs": "PEGS",
+  "game_tut_step1": "Glissez pour viser, relâchez pour tirer.",
+  "game_tut_step2": "Touchez les pegs pour marquer. Ils disparaissent après le tir.",
+  "game_tut_step3": "Attrapez la balle dans le seau pour gagner une balle supplémentaire.",
+  "game_tut_step4": "Touchez les pegs SOL pour activer des bonus.",
+  "game_tut_step5": "Enchaînez les combos pour multiplier vos points.",
+  "game_tut_goal_title": "TOUCHEZ TOUS LES PEGS SKR",
+  "game_tut_goal_desc": "Éliminez chaque peg SKR noir pour compléter le niveau. Plus de balles = game over!",
+  "game_tut_scoring_title": "SCORE",
+  "game_tut_scoring_values": "SKR +500 pts  •  BTC +100 pts  •  SOL +25 pts  •  Combos multiplient le score",
+  "game_tut_skr_name": "SKR — REQUIS",
+  "game_tut_skr_desc": "Touchez-les TOUS pour gagner. +500 pts chacun.",
+  "game_tut_btc_name": "BTC — BONUS",
+  "game_tut_btc_desc": "Pegs bonus optionnels. +100 pts chacun.",
+  "game_tut_sol_name": "SOL — BONUS",
+  "game_tut_sol_desc": "30% de chance de déclencher Multiball, Fireball ou Seau Lent. +25 pts.",
+  "game_tut_bumper_name": "ÉTOILE — BUMPER",
+  "game_tut_bumper_desc": "Rebond puissant, ne disparaît jamais.",
+  "game_tut_vortex_name": "VORTEX",
+  "game_tut_vortex_desc": "Capture la balle et la relance dans une direction aléatoire."
 }

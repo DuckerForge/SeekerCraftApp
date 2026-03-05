@@ -17,7 +17,6 @@
   "tagline": "SHOOT · BUILD · CONQUER",
   "copyright": "© 2025 DuckerForge · SeekerCraft",
   "terms_privacy": "Terms of Service · Privacy Policy",
-
   "play_now": "PLAY NOW",
   "play_now_sub": "Browse community levels →",
   "edit_mode": "EDIT MODE",
@@ -27,7 +26,6 @@
   "pvp": "PVP",
   "vs_ai": "VS AI",
   "profile": "PROFILE",
-
   "stat_pts": "PTS",
   "stat_wins": "WINS",
   "stat_medals": "MEDALS",
@@ -37,7 +35,6 @@
   "my_levels_count": "MY LEVELS ({{count}})",
   "levels_count": "{{count}} levels",
   "published": "Published",
-
   "new_game_title": "EDIT MODE",
   "new_game_sub": "Name your new level",
   "new_game_placeholder": "e.g. Sky Castle, Neon Drop...",
@@ -49,7 +46,6 @@
   "delete_level_msg": "Delete \"{{name}}\"?",
   "no_levels_title": "No levels yet!",
   "no_levels_msg": "Create your first level.",
-
   "activity_joined": "{{name}} joined SeekerCraft",
   "activity_beat": "{{name}} beat \"{{detail}}\"",
   "activity_unlocked": "{{name}} unlocked: {{detail}}",
@@ -60,19 +56,16 @@
   "activity_beat_ai": "{{name}} beat the AI! {{detail}}",
   "activity_lost_ai": "{{name}} lost to AI {{detail}}",
   "activity_playing": "{{name}} is playing!",
-
   "time_just_now": "just now",
   "time_m_ago": "{{n}}m ago",
   "time_h_ago": "{{n}}h ago",
   "time_d_ago": "{{n}}d ago",
-
   "welcome_tip_1": "Shoot the ball — hit ALL golden SKR pegs to WIN!",
   "welcome_tip_2": "Catch the moving bucket = free bonus ball",
   "welcome_tip_3": "Publish your levels for everyone to play",
   "welcome_tip_4": "Climb the global leaderboard & earn medals",
   "welcome_tip_5": "Challenge players to head-to-head duels",
   "welcome_button": "LET'S GO!",
-
   "connecting": "CONNECTING...",
   "connect_wallet": "CONNECT WALLET",
   "supported_wallets": "Phantom · Solflare · Backpack · WalletConnect",
@@ -85,26 +78,22 @@
   "i_agree": "I AGREE",
   "privacy_title": "PRIVACY POLICY",
   "terms_title": "TERMS OF SERVICE",
-
   "tab_stats": "📊 STATS",
   "tab_badges": "🏅 BADGES",
   "tab_trophies": "🏆 TROPHIES",
   "tab_wallet": "💳 WALLET",
   "tab_privacy": "🔒 PRIVACY",
-
   "tap_to_edit": "tap to edit name ✏️",
   "enter_name": "Enter name...",
   "name_updated_title": "Name Updated",
   "name_updated_msg": "Your display name has been updated!",
   "update_name_error": "Could not update name",
   "connect_wallet_first": "Connect wallet first",
-
   "total_score": "TOTAL SCORE",
   "levels_played": "LEVELS PLAYED",
   "completed": "COMPLETED",
   "created": "CREATED",
   "time_played": "TIME PLAYED",
-
   "achievements": "ACHIEVEMENTS",
   "achievement_progress": "ACHIEVEMENT PROGRESS",
   "pct_complete": "{{pct}}% complete — keep going! 🚀",
@@ -119,7 +108,6 @@
   "payment_failed_title": "Payment Failed",
   "payment_failed_msg": "Transaction rejected",
   "payment_error": "Could not process payment",
-
   "connected_wallet": "CONNECTED WALLET",
   "disconnect_wallet": "DISCONNECT WALLET",
   "disconnect_title": "Disconnect?",
@@ -130,7 +118,6 @@
   "leaderboard": "Leaderboard",
   "community_maps": "Community Maps",
   "credits": "Credits",
-
   "duel_rank": "DUEL RANK",
   "rank_legend": "LEGEND",
   "rank_master": "MASTER",
@@ -145,7 +132,6 @@
   "goal_play_n": "Play {{n}} levels",
   "goal_win_n": "Win {{n}} levels",
   "goal_reach_score": "Reach {{n}} total score",
-
   "filter_all": "all",
   "filter_player": "player",
   "filter_score": "score",
@@ -154,7 +140,6 @@
   "filter_donation": "donation",
   "filter_social": "social",
   "filter_special": "special",
-
   "saved": "Saved!",
   "level_saved": "Level saved locally",
   "save_error": "Failed to save level",
@@ -182,7 +167,6 @@
   "bucket_classic": "CLASSIC",
   "bucket_energy": "ENERGY",
   "bucket_lava": "LAVA",
-
   "element_erase": "Erase",
   "element_erase_desc": "Erase element from cell. Tap a cell to remove it.",
   "element_btc": "BTC",
@@ -207,20 +191,17 @@
   "element_track_desc": "Track rail – tap A then B. Rotate with slider below.",
   "element_bucket": "Bucket",
   "element_bucket_desc": "Free Ball bucket – tap to choose bucket style for your level.",
-
   "tut_step_1_title": "SELECT A TOOL",
   "tut_step_1_desc": "Choose a peg type from the toolbar at the top. Each type has different effects!",
   "tut_step_2_title": "TAP A CELL TO PLACE",
   "tut_step_2_desc": "Tap any cell on the grid to place your selected tool. Tap again to remove it.",
   "tut_step_3_title": "ADD SKR PEGS",
-  "tut_step_3_desc": "You need at least 1 SKR (gold peg) to publish your level. Players must hit all SKR pegs to win!",
+  "tut_step_3_desc": "You need at least 1 SKR peg to publish your level. Players must hit all SKR pegs to win!",
   "tut_step_4_title": "TEST YOUR LEVEL",
   "tut_step_4_desc": "When you're ready, tap PLAY TEST at the bottom to try your level!",
   "tut_next": "NEXT →",
   "tut_got_it": "GOT IT!",
-
   "privacy_body": "SeekerCraft respects your privacy.\n\nWHAT WE COLLECT\n• Wallet address (public key only — never private keys)\n• Game scores, achievements, levels you create\n• Play counts and ratings\n\nHOW WE USE IT\nYour wallet address is used as a unique identifier for the leaderboard and achievement system. We never sell your data to third parties.\n\nDATA STORAGE\nAll data is stored securely on Google Firebase (USA). Blockchain transactions are public by design and visible on Solana explorers.\n\nYOUR RIGHTS\nYou can disconnect your wallet at any time from the Wallet tab. This removes your local session.\n\nSECURITY\nWe never request, store or have access to your private keys or seed phrases. All Solana transactions are signed exclusively by your wallet app.\n\nCONTACT\nFor privacy questions, contact us via X (@SeekerCraftApp).\n\nLast updated: February 2026",
-
   "levels_label": "{{count}} LEVELS",
   "level_n": "LEVEL {{n}}",
   "edit": "EDIT",
@@ -233,12 +214,12 @@
   "publish_to_community": "PUBLISH TO COMMUNITY",
   "publish_donate_info": "Once published, players can donate!\nYou earn 90% of all donations.",
   "publishing": "PUBLISHING...",
-  "publish_cost": "PUBLISH · ~{{sol}} SOL",
+  "publish_cost": "PUBLISH · ~{{sol}} SKR",
   "update_published": "UPDATE PUBLISHED GAME",
   "updating": "UPDATING...",
   "publish_confirm_title": "Publish to Community",
-  "publish_confirm_msg": "Cost: ~{{sol}} SOL (${{usd}})\n\nOnce published, players can donate!\nYou earn 90% of all donations.",
-  "publish_pay": "PAY {{sol}} SOL",
+  "publish_confirm_msg": "Cost: ~{{sol}} SKR (${{usd}})\n\nOnce published, players can donate!\nYou earn 90% of all donations.",
+  "publish_pay": "PAY {{sol}} SKR",
   "publish_success_title": "Published! 🎉",
   "publish_success_msg": "Your game is now live on SeekerCraft!",
   "publish_error": "Failed to publish",
@@ -261,7 +242,6 @@
   "delete_level_confirm": "Delete level?",
   "delete_level_sure": "Are you sure?",
   "delete_btn": "Delete",
-
   "game_not_found": "Game not found",
   "game_progress": "GAME PROGRESS",
   "current": "CURRENT",
@@ -302,7 +282,6 @@
   "donation_90_creator": "90% goes to the creator · 10% to developers",
   "donation_90_player": "90% goes to the player · 10% to developers",
   "custom_skr_amount": "Custom SKR amount",
-
   "test": "TEST",
   "skr_left": "SKR LEFT",
   "rst": "RST",
@@ -339,7 +318,6 @@
   "plus_ball": "+1 BALL",
   "last_skr": "⚡ LAST SKR!",
   "ready_popup": "{{label}} READY!",
-
   "play_vs_ai": "PLAY VS AI",
   "vs_ai_desc": "Challenge the AI on a community level!\nTake turns shooting, highest score wins.",
   "difficulty": "DIFFICULTY",
@@ -352,7 +330,6 @@
   "select_level": "SELECT LEVEL",
   "no_community_levels": "No community levels found",
   "levels_available": "{{count}} levels available · Tap to start",
-
   "no_rankings": "No rankings yet. Play some games!",
   "your_duel_record": "YOUR DUEL RECORD",
   "incoming_challenges": "INCOMING CHALLENGES",
@@ -391,11 +368,9 @@
   "duel": "DUEL",
   "donate_to": "DONATE TO {{name}}",
   "failed": "Failed",
-
   "achievement_unlocked_label": "ACHIEVEMENT UNLOCKED",
   "new_achievement": "NEW ACHIEVEMENT",
   "unlock_pay": "$0.50 UNLOCK",
-
   "day_n": "DAY {{n}}",
   "daily_checkin": "DAILY CHECK-IN STREAK",
   "day_milestone": "DAY {{n}}: +{{pts}}",
@@ -403,7 +378,6 @@
   "next_day_bonus": "Day {{n}}: +{{pts}} PTS bonus!",
   "come_back_tomorrow": "Come back tomorrow!",
   "claim_reward": "CLAIM REWARD",
-
   "ball_skin_title": "BALL SKIN",
   "choose_style": "Choose your style",
   "equipped": "EQUIPPED",
@@ -419,9 +393,30 @@
   "skin_fire_desc": "Burning hot",
   "skin_rainbow": "RAINBOW",
   "skin_rainbow_desc": "Fabulous",
-
   "games_tab": "GAMES",
   "players_tab": "PLAYERS",
   "tab_leaderboard": "LEADERBOARD",
-  "tab_duels": "DUELS"
+  "tab_duels": "DUELS",
+  "game_tut_howto": "HOW TO PLAY",
+  "game_tut_goal": "GOAL",
+  "game_tut_pegs": "PEGS",
+  "game_tut_step1": "Drag to aim, release to shoot the ball.",
+  "game_tut_step2": "Hit pegs to score points. Pegs fade out after being hit.",
+  "game_tut_step3": "Catch the ball in the moving bucket at the bottom to earn a free ball.",
+  "game_tut_step4": "Hit SOL pegs for a chance to activate power-ups.",
+  "game_tut_step5": "Build combos by hitting many pegs in one shot for bonus points.",
+  "game_tut_goal_title": "HIT ALL SKR PEGS",
+  "game_tut_goal_desc": "Clear every black SKR peg to complete the level. Run out of balls before hitting all SKR pegs and it's game over!",
+  "game_tut_scoring_title": "SCORING",
+  "game_tut_scoring_values": "SKR +500 pts  •  BTC +100 pts  •  SOL +25 pts  •  Combos multiply your score",
+  "game_tut_skr_name": "SKR — REQUIRED",
+  "game_tut_skr_desc": "Hit ALL of these to win. +500 pts each.",
+  "game_tut_btc_name": "BTC — BONUS",
+  "game_tut_btc_desc": "Optional bonus pegs. +100 pts each.",
+  "game_tut_sol_name": "SOL — POWER-UP",
+  "game_tut_sol_desc": "30% chance to trigger Multiball, Fireball or Slow Bucket. +25 pts.",
+  "game_tut_bumper_name": "STAR — BUMPER",
+  "game_tut_bumper_desc": "Powerful bounce, never disappears. Always active.",
+  "game_tut_vortex_name": "VORTEX",
+  "game_tut_vortex_desc": "Captures the ball and launches it in a random direction."
 }

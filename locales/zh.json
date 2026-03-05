@@ -17,7 +17,6 @@
   "tagline": "射击 · 建造 · 征服",
   "copyright": "© 2025 DuckerForge · SeekerCraft",
   "terms_privacy": "服务条款 · 隐私政策",
-
   "play_now": "立即游戏",
   "play_now_sub": "浏览社区关卡 →",
   "edit_mode": "编辑模式",
@@ -27,7 +26,6 @@
   "pvp": "PVP",
   "vs_ai": "对战AI",
   "profile": "个人资料",
-
   "stat_pts": "积分",
   "stat_wins": "胜利",
   "stat_medals": "奖牌",
@@ -37,7 +35,6 @@
   "my_levels_count": "我的关卡 ({{count}})",
   "levels_count": "{{count}} 个关卡",
   "published": "已发布",
-
   "new_game_title": "编辑模式",
   "new_game_sub": "为你的新关卡命名",
   "new_game_placeholder": "例如：天空城堡、霓虹坠落...",
@@ -49,7 +46,6 @@
   "delete_level_msg": "删除\"{{name}}\"？",
   "no_levels_title": "还没有关卡！",
   "no_levels_msg": "创建你的第一个关卡。",
-
   "activity_joined": "{{name}} 加入了 SeekerCraft",
   "activity_beat": "{{name}} 通关了\"{{detail}}\"",
   "activity_unlocked": "{{name}} 解锁了：{{detail}}",
@@ -60,19 +56,16 @@
   "activity_beat_ai": "{{name}} 击败了AI！{{detail}}",
   "activity_lost_ai": "{{name}} 输给了AI {{detail}}",
   "activity_playing": "{{name}} 正在游戏中！",
-
   "time_just_now": "刚刚",
   "time_m_ago": "{{n}}分钟前",
   "time_h_ago": "{{n}}小时前",
   "time_d_ago": "{{n}}天前",
-
   "welcome_tip_1": "发射球——击中所有金色 SKR 钉子即可获胜！",
   "welcome_tip_2": "接住移动的桶 = 免费奖励球",
   "welcome_tip_3": "发布你的关卡让所有人来玩",
   "welcome_tip_4": "攀登全球排行榜并赢取奖牌",
   "welcome_tip_5": "挑战其他玩家进行一对一对决",
   "welcome_button": "开始吧！",
-
   "connecting": "连接中...",
   "connect_wallet": "连接钱包",
   "supported_wallets": "Phantom · Solflare · Backpack · WalletConnect",
@@ -85,26 +78,22 @@
   "i_agree": "我同意",
   "privacy_title": "隐私政策",
   "terms_title": "服务条款",
-
   "tab_stats": "📊 统计",
   "tab_badges": "🏅 徽章",
   "tab_trophies": "🏆 奖杯",
   "tab_wallet": "💳 钱包",
   "tab_privacy": "🔒 隐私",
-
   "tap_to_edit": "点击编辑名称 ✏️",
   "enter_name": "输入名称...",
   "name_updated_title": "名称已更新",
   "name_updated_msg": "你的显示名称已更新！",
   "update_name_error": "无法更新名称",
   "connect_wallet_first": "请先连接钱包",
-
   "total_score": "总分",
   "levels_played": "已游玩关卡",
   "completed": "已完成",
   "created": "已创建",
   "time_played": "游戏时间",
-
   "achievements": "成就",
   "achievement_progress": "成就进度",
   "pct_complete": "已完成 {{pct}}%——继续加油！🚀",
@@ -119,7 +108,6 @@
   "payment_failed_title": "支付失败",
   "payment_failed_msg": "交易被拒绝",
   "payment_error": "无法处理支付",
-
   "connected_wallet": "已连接钱包",
   "disconnect_wallet": "断开钱包",
   "disconnect_title": "断开连接？",
@@ -130,7 +118,6 @@
   "leaderboard": "排行榜",
   "community_maps": "社区地图",
   "credits": "制作团队",
-
   "duel_rank": "对决排名",
   "rank_legend": "传奇",
   "rank_master": "大师",
@@ -145,7 +132,6 @@
   "goal_play_n": "游玩 {{n}} 个关卡",
   "goal_win_n": "通关 {{n}} 个关卡",
   "goal_reach_score": "达到 {{n}} 总分",
-
   "filter_all": "全部",
   "filter_player": "玩家",
   "filter_score": "分数",
@@ -154,7 +140,6 @@
   "filter_donation": "捐赠",
   "filter_social": "社交",
   "filter_special": "特殊",
-
   "saved": "已保存！",
   "level_saved": "关卡已保存到本地",
   "save_error": "保存关卡失败",
@@ -182,7 +167,6 @@
   "bucket_classic": "经典",
   "bucket_energy": "能量",
   "bucket_lava": "熔岩",
-
   "element_erase": "擦除",
   "element_erase_desc": "从格子中擦除元素。点击格子即可移除。",
   "element_btc": "BTC",
@@ -207,7 +191,6 @@
   "element_track_desc": "轨道导轨——先点A再点B。用下方滑块旋转。",
   "element_bucket": "桶",
   "element_bucket_desc": "免费球桶——点击选择关卡的桶样式。",
-
   "tut_step_1_title": "选择工具",
   "tut_step_1_desc": "从顶部工具栏选择一个钉子类型。每种类型有不同的效果！",
   "tut_step_2_title": "点击放置",
@@ -219,7 +202,6 @@
   "tut_next": "下一步 →",
   "tut_got_it": "知道了！",
   "privacy_body": "SeekerCraft尊重您的隐私。\n\n我们收集什么\n• 钱包地址（仅公钥）\n• 游戏分数、成就、创建的关卡\n• 游戏次数和评分\n\n使用方式\n您的钱包地址用作排行榜的唯一标识。我们绝不出售您的数据。\n\n数据存储\n数据安全存储在Google Firebase（美国）。区块链交易公开可见。\n\n您的权利\n随时可从钱包标签断开连接。\n\n安全性\n我们从不访问您的私钥。所有Solana交易由您的钱包应用签名。\n\n联系方式\n问题请联系: X (@SeekerCraftApp)。\n\n最后更新: 2026年2月",
-
   "levels_label": "{{count}} 个关卡",
   "level_n": "关卡 {{n}}",
   "edit": "编辑",
@@ -236,8 +218,8 @@
   "update_published": "更新已发布游戏",
   "updating": "更新中...",
   "publish_confirm_title": "发布到社区",
-  "publish_confirm_msg": "费用：约 {{sol}} SOL (${{usd}})\n\n发布后，玩家可以捐赠！\n你将获得所有捐赠的90%。",
-  "publish_pay": "支付 {{sol}} SOL",
+  "publish_confirm_msg": "Cost: ~{{sol}} SKR (${{usd}})\n\nOnce published, players can donate!\nYou earn 90% of all donations.",
+  "publish_pay": "PAY {{sol}} SKR",
   "publish_success_title": "已发布！🎉",
   "publish_success_msg": "你的游戏已在 SeekerCraft 上线！",
   "publish_error": "发布失败",
@@ -260,7 +242,6 @@
   "delete_level_confirm": "删除关卡？",
   "delete_level_sure": "你确定吗？",
   "delete_btn": "删除",
-
   "game_not_found": "未找到游戏",
   "game_progress": "游戏进度",
   "current": "当前",
@@ -301,7 +282,6 @@
   "donation_90_creator": "90% 归创作者 · 10% 归开发者",
   "donation_90_player": "90% 归玩家 · 10% 归开发者",
   "custom_skr_amount": "自定义 SKR 金额",
-
   "test": "测试",
   "skr_left": "剩余 SKR",
   "rst": "重置",
@@ -338,7 +318,6 @@
   "plus_ball": "+1 球",
   "last_skr": "⚡ 最后的 SKR！",
   "ready_popup": "{{label}} 就绪！",
-
   "play_vs_ai": "对战AI",
   "vs_ai_desc": "在社区关卡上挑战AI！\n轮流射击，最高分者获胜。",
   "difficulty": "难度",
@@ -351,7 +330,6 @@
   "select_level": "选择关卡",
   "no_community_levels": "未找到社区关卡",
   "levels_available": "{{count}} 个关卡可用 · 点击开始",
-
   "no_rankings": "暂无排名。快去玩几局吧！",
   "your_duel_record": "你的对决记录",
   "incoming_challenges": "收到的挑战",
@@ -390,11 +368,9 @@
   "duel": "对决",
   "donate_to": "捐赠给 {{name}}",
   "failed": "失败",
-
   "achievement_unlocked_label": "成就已解锁",
   "new_achievement": "新成就",
   "unlock_pay": "$0.50 解锁",
-
   "day_n": "第 {{n}} 天",
   "daily_checkin": "每日签到连续奖励",
   "day_milestone": "第 {{n}} 天：+{{pts}}",
@@ -402,7 +378,6 @@
   "next_day_bonus": "第 {{n}} 天：+{{pts}} 分奖励！",
   "come_back_tomorrow": "明天再来！",
   "claim_reward": "领取奖励",
-
   "ball_skin_title": "球皮肤",
   "choose_style": "选择你的风格",
   "equipped": "已装备",
@@ -418,9 +393,30 @@
   "skin_fire_desc": "炽热燃烧",
   "skin_rainbow": "彩虹",
   "skin_rainbow_desc": "绚丽多彩",
-
   "games_tab": "游戏",
   "players_tab": "玩家",
   "tab_leaderboard": "排行榜",
-  "tab_duels": "对决"
+  "tab_duels": "对决",
+  "game_tut_howto": "游戏教程",
+  "game_tut_goal": "目标",
+  "game_tut_pegs": "钉子",
+  "game_tut_step1": "拖动瞄准，松手射击。",
+  "game_tut_step2": "击打钉子得分，被击中的钉子会消失。",
+  "game_tut_step3": "用底部移动的桶接住球，可获得额外球。",
+  "game_tut_step4": "击打SOL钉有机会激活能力。",
+  "game_tut_step5": "多连击获得连击加分。",
+  "game_tut_goal_title": "击中所有SKR钉",
+  "game_tut_goal_desc": "清除每个黑色SKR钉完成关卡。用完球就游戏结束！",
+  "game_tut_scoring_title": "计分",
+  "game_tut_scoring_values": "SKR +500分  •  BTC +100分  •  SOL +25分  •  连击倍数加分",
+  "game_tut_skr_name": "SKR — 必须",
+  "game_tut_skr_desc": "击中全部才能获胜。每个+500分。",
+  "game_tut_btc_name": "BTC — 奖励",
+  "game_tut_btc_desc": "可选奖励钉。每个+100分。",
+  "game_tut_sol_name": "SOL — 技能",
+  "game_tut_sol_desc": "30%概率触发多球/火球/慢桶。+25分。",
+  "game_tut_bumper_name": "星星 — 弹板",
+  "game_tut_bumper_desc": "强力弹射，永不消失。",
+  "game_tut_vortex_name": "漩涡",
+  "game_tut_vortex_desc": "捕获球并随机弹出。"
 }

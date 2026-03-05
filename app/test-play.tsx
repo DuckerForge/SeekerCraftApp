@@ -204,6 +204,7 @@ export default function TestPlayScreen() {
   const [gameOver,setGameOver]=useState(false);
   const [isCommunityGame,setIsCommunityGame]=useState(false);
   const [shooting,setShooting]=useState(false);
+  const [aiShooting,setAiShooting]=useState(false); // true only while AI ball is in flight
   const [activePower,setActivePower]=useState<string|null>(null);
   // FIX: Peggle-style bonus — earned when SOL peg hit, USED on next shot
   // pendingBonus = earned but not yet activated. activePower = currently active this shot.
@@ -288,6 +289,9 @@ export default function TestPlayScreen() {
   const popupsRef=useRef<ScorePopup[]>([]);
   const activePowerRef=useRef<string|null>(null);
   const pendingBonusRef=useRef<string|null>(null);
+  // persist player bonus/charge across AI turns so they aren't lost
+  const savedPlayerBonusRef=useRef<string|null>(null);
+  const savedPlayerUltRef=useRef<number>(0);
   const pegsRef=useRef<Peg[]>([]);
   const isPlaytestRef=useRef(false),zoomMusicOn=useRef(false),musicMutedRef=useRef(false);
   const bgMusicRef=useRef<any>(null);
@@ -671,9 +675,8 @@ export default function TestPlayScreen() {
       if(ultChargeRef.current<100&&!activePowerRef.current&&!pendingBonusRef.current&&Math.random()<0.30) triggerSOLBonus();
     }
     setPegs([...pegsRef.current]);
-    // Peg hit: mark touched on JS side for rendering with fade effect
-    // Collision radius already zeroed in worklet — do NOT re-assign pH/pR here (invisible wall race condition)
-    // Don't set hit=true immediately — let the peg fade out visually first (800ms full + 400ms fade)
+    // mark touched for fade animation; peg stays collideable until fade loop zeros pR at ~1400ms
+    // do NOT touch pH/pR here — worklet owns those (race condition)
     if(p.type!=='bumper'&&p.type!=='bumper_big'&&p.type!=='curved_left'&&p.type!=='curved_right'&&p.type!=='teleport_a'&&p.type!=='teleport_b'){
       if(!pegsRef.current[idx].touchTime) pegsRef.current[idx].touchTime=Date.now();
       setPegs([...pegsRef.current]);
@@ -925,21 +928,32 @@ export default function TestPlayScreen() {
         saveReplayIfChallenge(); saveAmazingReplay();
         if(aiModeRef.current) logAIResult();
       } else if(aiModeRef.current){
-        // AI mode: alternate turns — clear bonuses (per-turn, not shared)
-        pendingBonusRef.current=null; setPendingBonus(null);
-        activePowerRef.current=null; setActivePower(null);
-        ultChargeRef.current=0; setUltCharge(0);
         const wasAI = aiTurnRef.current;
+        if(!wasAI){
+          // PLAYER → AI: stash player's pending bonus + ult charge, clear for AI
+          savedPlayerBonusRef.current=pendingBonusRef.current;
+          savedPlayerUltRef.current=ultChargeRef.current;
+          pendingBonusRef.current=null; setPendingBonus(null);
+          activePowerRef.current=null; setActivePower(null);
+          ultChargeRef.current=0; setUltCharge(0);
+        } else {
+          // AI → PLAYER: restore stashed bonus + ult charge, clear aiShooting
+          setAiShooting(false);
+          pendingBonusRef.current=savedPlayerBonusRef.current;
+          setPendingBonus(savedPlayerBonusRef.current);
+          ultChargeRef.current=savedPlayerUltRef.current;
+          setUltCharge(savedPlayerUltRef.current);
+          savedPlayerBonusRef.current=null;
+          savedPlayerUltRef.current=0;
+          activePowerRef.current=null; setActivePower(null);
+        }
         aiTurnRef.current = !wasAI; aiTurnSV.value = !wasAI;
         setAiTurn(!wasAI);
         if(!wasAI){
-          // Switch to AI turn
           setTurnLabel(t('ai_turn'));
           setTimeout(()=>setTurnLabel(null),1500);
-          // AI shoots after delay
           setTimeout(()=>aiShoot(),2000);
         } else {
-          // Switch to player turn
           setTurnLabel(t('your_turn'));
           setTimeout(()=>setTurnLabel(null),1500);
         }
@@ -1100,35 +1114,51 @@ export default function TestPlayScreen() {
         angle=bestAngle+(Math.random()-0.5)*0.15;
       }
     } else {
-      // Hard: ray-cast many angles with fine granularity, pick best weighted score
+      // HARD: fine-grained ray-cast, obstacle-aware, maximises gold hits
+      // weights: gold=20, red=3, blue=1; penalise shots that hit 0 gold
       if(pegsArr.length>0){
-        let bestAngle=Math.PI/2,bestHits=0;
-        for(let a=0.2;a<=2.9;a+=0.03){
-          const vx=Math.cos(a)*INITIAL_SHOT_SPEED,vy=Math.sin(a)*INITIAL_SHOT_SPEED;
-          let cx=SW/2,cy=PLAY_TOP-20,cvx=vx,cvy=vy,hits=0;
+        const allPegsForSim=pegsRef.current.filter(p=>!p.hit&&!p.touched);
+        let bestAngle=Math.PI/2,bestScore=-1;
+        for(let a=0.15;a<=2.95;a+=0.012){
+          const vx0=Math.cos(a)*INITIAL_SHOT_SPEED,vy0=Math.sin(a)*INITIAL_SHOT_SPEED;
+          let cx=SW/2,cy=PLAY_TOP-20,cvx=vx0,cvy=vy0,score=0,goldHits=0;
           const hitSet=new Set<number>();
-          for(let s=0;s<120;s++){
-            cvy+=GRAVITY*0.016; cx+=cvx*0.016; cy+=cvy*0.016;
+          const DT=0.014;
+          for(let s=0;s<280;s++){
+            cvy+=GRAVITY*DT; cx+=cvx*DT; cy+=cvy*DT;
             if(cx<PAD+BALL_R){cx=PAD+BALL_R;cvx=Math.abs(cvx)*WALL_RESTITUTION;}
             if(cx>SW-PAD-BALL_R){cx=SW-PAD-BALL_R;cvx=-Math.abs(cvx)*WALL_RESTITUTION;}
-            for(let j=0;j<pegsArr.length;j++){
+            for(let j=0;j<allPegsForSim.length;j++){
               if(hitSet.has(j)) continue;
-              const dist=Math.hypot(cx-pegsArr[j].x,cy-pegsArr[j].y);
-              if(dist<BALL_R+pegsArr[j].r){
+              const pg=allPegsForSim[j];
+              const dist=Math.hypot(cx-pg.x,cy-pg.y);
+              if(dist<BALL_R+pg.r&&dist>0.01){
                 hitSet.add(j);
-                const weight=pegsArr[j].type==='peg_gold'?10:1;
-                hits+=weight;
-                // Simulate bounce
-                const nx=(cx-pegsArr[j].x)/dist,ny=(cy-pegsArr[j].y)/dist;
-                const dot=cvx*nx+cvy*ny;
-                if(dot<0){cvx-=2*dot*nx*RESTITUTION;cvy-=2*dot*ny*RESTITUTION;}
+                if(pg.type==='peg_gold'){score+=20;goldHits++;}
+                else if(pg.type==='peg_red') score+=3;
+                else if(pg.type==='peg_blue') score+=1;
+                // bumpers still bounce but don't score here
+                if(pg.type!=='bumper'&&pg.type!=='bumper_big'){
+                  const nx=(cx-pg.x)/dist,ny=(cy-pg.y)/dist;
+                  const dot=cvx*nx+cvy*ny;
+                  if(dot<0){cvx=(cvx-2*dot*nx)*RESTITUTION;cvy=(cvy-2*dot*ny)*RESTITUTION;}
+                  const spd=Math.hypot(cvx,cvy);
+                  if(spd>MAX_VELOCITY){cvx=cvx/spd*MAX_VELOCITY;cvy=cvy/spd*MAX_VELOCITY;}
+                }
               }
             }
             if(cy>PLAY_BOT) break;
           }
-          if(hits>bestHits){bestHits=hits;bestAngle=a;}
+          // require at least 1 gold hit; prefer more gold + chain
+          if(goldHits>0&&score>bestScore){bestScore=score;bestAngle=a;}
         }
-        angle=bestAngle;
+        // fallback if no angle hits gold
+        if(bestScore<0){
+          const t=pegsArr.find(p=>p.type==='peg_gold')||pegsArr[0];
+          bestAngle=Math.atan2(t.y-(PLAY_TOP-20),t.x-SW/2);
+          bestAngle=Math.max(0.15,Math.min(2.95,bestAngle));
+        }
+        angle=bestAngle; // no noise — hard plays perfectly
       }
     }
     // Animate aim cursor to target angle
@@ -1142,7 +1172,7 @@ export default function TestPlayScreen() {
       const wobble=t<0.8?(Math.sin(elapsed*0.01)*0.05*(1-t)):0;
       aimAngle.value=startAngle+(angle-startAngle)*eased+wobble;
       if(t<1) requestAnimationFrame(animateAim);
-      else { aimAngle.value=angle; setTimeout(()=>shoot(true),200); }
+      else { aimAngle.value=angle; setTimeout(()=>{setAiShooting(true);shoot(true);},200); }
     };
     requestAnimationFrame(animateAim);
   };
@@ -1361,8 +1391,13 @@ export default function TestPlayScreen() {
         const dx4=bx.value-pX.value[i],dy4=by.value-pY.value[i],dist4=Math.hypot(dx4,dy4),minD=BALL_R+pR.value[i];
         if(dist4<minD&&dist4>0.01){
           const nx4=dx4/dist4,ny4=dy4/dist4;
-          // Already-hit peg: skip (pR is zeroed immediately, but double-check)
-          if(pH.value[i]&&pT.value[i]!=='bumper'&&pT.value[i]!=='bumper_big'&&pT.value[i]!=='curved_left'&&pT.value[i]!=='curved_right'&&pT.value[i]!=='teleport_a'&&pT.value[i]!=='teleport_b') continue;
+          // Peg already scored but still fading (pR>0): bounce-only, no re-score
+          if(pH.value[i]&&pT.value[i]!=='bumper'&&pT.value[i]!=='bumper_big'&&pT.value[i]!=='curved_left'&&pT.value[i]!=='curved_right'&&pT.value[i]!=='teleport_a'&&pT.value[i]!=='teleport_b'){
+            const dotF=bvx.value*nx4+bvy.value*ny4;
+            bx.value=pX.value[i]+nx4*(minD+1);by.value=pY.value[i]+ny4*(minD+1);
+            if(dotF<0){bvx.value=(bvx.value-2*dotF*nx4)*RESTITUTION;bvy.value=(bvy.value-2*dotF*ny4)*RESTITUTION;const[cvFx,cvFy]=clampVelocity(bvx.value,bvy.value,maxVelSV.value);bvx.value=cvFx;bvy.value=cvFy;}
+            continue;
+          }
           if(pT.value[i]==='curved_left'||pT.value[i]==='curved_right'){
             if(!vortexActive.value&&vortexCooldown.value<=0){
               vortexActive.value=true;vortexTimer.value=0;vortexCX.value=pX.value[i];vortexCY.value=pY.value[i];
@@ -1431,10 +1466,9 @@ export default function TestPlayScreen() {
               // Small nudge away from peg center (won't enter wall since it's tiny)
               bx.value+=nx4*1.0; by.value+=ny4*1.0;
             }
-            // Mark peg as hit in worklet + zero collision radius immediately (no invisible wall)
+            // mark scored; pR stays non-zero until JS fade loop zeros it at ~1400ms
             if(pT.value[i]!=='bumper'&&pT.value[i]!=='bumper_big'){
               const nh=[...pH.value]; nh[i]=true; pH.value=nh;
-              const nr=[...pR.value]; nr[i]=0; pR.value=nr;
             }
             runOnJS(onHitJS)(i);
             // Multiball: spawn on first peg hit (fan-spread from current velocity)
@@ -1550,12 +1584,11 @@ export default function TestPlayScreen() {
               mb.vx.value=(mb.vx.value-2*dot2*nx4)*mult2;mb.vy.value=(mb.vy.value-2*dot2*ny4)*mult2;
             }
             mb.x.value=pX.value[i]+nx4*(minD+1);mb.y.value=pY.value[i]+ny4*(minD+1);
-            // Already-hit peg: skip (pR zeroed immediately)
+            // already scored: bounce handled above, skip re-scoring
             if(pH.value[i]&&pT.value[i]!=='bumper'&&pT.value[i]!=='bumper_big') continue;
-            // Mark hit in worklet + zero collision immediately
+            // mark scored; pR zeroed by JS fade loop
             if(pT.value[i]!=='bumper'&&pT.value[i]!=='bumper_big'){
               const nh=[...pH.value]; nh[i]=true; pH.value=nh;
-              const nr=[...pR.value]; nr[i]=0; pR.value=nr;
             }
             runOnJS(onHitJS)(i);
           }
@@ -1588,16 +1621,23 @@ export default function TestPlayScreen() {
         const u=popupsRef.current.map(p=>({...p,alpha:p.alpha-0.045,y:p.y-0.8})).filter(p=>p.alpha>0.02);
         popupsRef.current=u; setPopups([...u]);
       }
-      // Drive peg fade animation for touched pegs (Peggle 2 style)
+      // drive peg fade: 400ms full → 350ms fade → gone at 750ms, pR zeroed
       const now=Date.now();
       let needsPegUpdate=false;
-      for(const p of pegsRef.current){
+      let pRChanged=false;
+      const newPR=pR.value.length>0?[...pR.value]:null;
+      for(let pi=0;pi<pegsRef.current.length;pi++){
+        const p=pegsRef.current[pi];
         if(p.touched&&!p.hit&&p.touchTime>0){
           const elapsed=now-p.touchTime;
-          if(elapsed>1000) needsPegUpdate=true; // start fade after 1s
-          if(elapsed>1400) p.hit=true; // mark fully gone after 1s + 400ms fade
+          if(elapsed>400) needsPegUpdate=true;
+          if(elapsed>750){
+            p.hit=true;
+            if(newPR&&newPR[pi]>0){newPR[pi]=0;pRChanged=true;}
+          }
         }
       }
+      if(pRChanged&&newPR) pR.value=newPR;
       if(needsPegUpdate) setPegs([...pegsRef.current]);
       // Drive curve hit glow fade
       let needsCurveUpdate=false;
@@ -1691,7 +1731,7 @@ export default function TestPlayScreen() {
           <Text style={{color:'#FF4500',fontSize:14,fontWeight:'900',fontFamily:'monospace'}}>{fmtScore(aiScore)}</Text>
         </View>
       </View>
-      {aiTurn&&<View style={{position:'absolute',top:PLAY_TOP-45,left:SW/2-20,zIndex:15}} pointerEvents="none">
+      {aiTurn&&!aiShooting&&<View style={{position:'absolute',top:PLAY_TOP+12,left:SW/2-20,zIndex:15}} pointerEvents="none">
         <Image source={ICON_AI_IMG} style={{width:40,height:40,opacity:0.9}}/>
       </View>}
     </>}
@@ -1786,12 +1826,11 @@ export default function TestPlayScreen() {
         </React.Fragment>);
       }
       if(!img) return null;
-      // Peggle 2 style: peg stays at full opacity 1s when touched, fades 400ms then disappears
+      // 400ms full → 350ms fade → gone at 750ms
       let op=1;
       if(p.touched&&p.touchTime>0){
         const elapsed=Date.now()-p.touchTime;
-        if(elapsed>1000) op=Math.max(0,1-(elapsed-1000)/400); // fade from 1000ms to 1400ms
-        // glow effect while still visible
+        if(elapsed>400) op=Math.max(0,1-(elapsed-400)/350);
       }
       const strokeC=p.type==='peg_red'?C.orange:p.type==='peg_gold'?C.gold:p.type==='peg_blue'?C.blue:C.green;
       const glowOp=p.touched?0.85:0.55; // brighter glow on touched pegs

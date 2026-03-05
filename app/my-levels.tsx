@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { ref, set } from 'firebase/database';
 import { logActivity, updateUserStats, database } from '@/utils/firebase';
-import { payPublishFee, getDeviceFingerprint, getSOLPriceUSD, PUBLISH_FEE_USD } from '@/utils/payments';
+import { payPublishFee, getDeviceFingerprint, getSKRPriceUSD, PUBLISH_FEE_USD } from '@/utils/payments';
 import StickmanBuilder from '@/components/StickmanBuilder';
 import { useTranslation } from 'react-i18next';
 
@@ -78,14 +78,13 @@ export default function MyLevelsScreen() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState('');
   const [publishing, setPublishing] = useState(false);
-  const [solPreview, setSolPreview] = useState<string | null>(null);
+  const [skrPreview, setSkrPreview] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
 
   useEffect(() => {
-    getSOLPriceUSD().then(price => {
-      const sol = PUBLISH_FEE_USD / price;
-      setSolPreview(sol.toFixed(4));
+    getSKRPriceUSD().then(price => {
+      setSkrPreview((PUBLISH_FEE_USD / price).toFixed(1));
     }).catch(() => {});
   }, []);
 
@@ -313,16 +312,16 @@ export default function MyLevelsScreen() {
     const addr = await AsyncStorage.getItem('wallet_address');
     if (!addr) { Alert.alert(t('error'), t('no_wallet_error')); return; }
 
-    const solPrice = await getSOLPriceUSD();
-    const solAmount = (PUBLISH_FEE_USD / solPrice).toFixed(4);
+    const skrPrice = await getSKRPriceUSD();
+    const skrAmount = (PUBLISH_FEE_USD / skrPrice).toFixed(1);
 
     Alert.alert(
       t('publish_confirm_title'),
-      t('publish_confirm_msg', {sol: solAmount, usd: PUBLISH_FEE_USD.toFixed(2)}),
+      t('publish_confirm_msg', {sol: skrAmount, usd: PUBLISH_FEE_USD.toFixed(2)}),
       [
         { text: t('cancel'), style: 'cancel' },
         {
-          text: t('publish_pay', {sol: solAmount}),
+          text: t('publish_pay', {sol: skrAmount}),
           onPress: async () => {
             setPublishing(true);
             try {
@@ -573,7 +572,7 @@ export default function MyLevelsScreen() {
                     style={{ alignItems:'center', justifyContent:'center', flexDirection:'row', gap:10, paddingVertical:14 }}
                   >
                     <Text style={{ color: levels.length === 0 ? C.textMuted : '#FFF', fontSize: 13, fontWeight: '900', fontFamily: 'monospace' }}>
-                      {publishing ? t('publishing') : t('publish_cost', {sol: solPreview || '?'})}
+                      {publishing ? t('publishing') : t('publish_cost', {sol: skrPreview || '?'})}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
