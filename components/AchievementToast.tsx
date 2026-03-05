@@ -40,7 +40,8 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
       Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
     ]).start();
 
-    // FIX: no auto-dismiss — user MUST interact (press unlock or ✕)
+    // Auto-dismiss after 4s if user doesn't interact (prevents spam when many achievements queue)
+    timerRef.current = setTimeout(() => { dismissToast(); }, 4000);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [achievementKey]);
 

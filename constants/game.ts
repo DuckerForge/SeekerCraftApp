@@ -30,7 +30,7 @@ export const SKR_MINT = 'SKRTokenMintAddressHere'; // TODO: set real mint addres
 
 
 // â”€â”€â”€ GRID â”€â”€â”€
-export const COLS = 12;
+export const COLS = 11;
 export const ROWS = 16;
 export const GRID_PAD = 20;
 export const CELL = Math.floor((SW - GRID_PAD * 2) / COLS);

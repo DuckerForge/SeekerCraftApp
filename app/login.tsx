@@ -10,6 +10,9 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useWallet } from '@/utils/walletContext'
 import * as Haptics from 'expo-haptics'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/utils/i18n'
 
 const { width: SW, height: SH } = Dimensions.get('window')
 
@@ -19,6 +22,7 @@ const ICON_STELLA = require('../assets/images/Icons/stella.png')
 const ICON_SAVE   = require('../assets/images/Icons/save.png')
 const ICON_BROWSE = require('../assets/images/Icons/Browse.png')
 const ICON_PLAY   = require('../assets/images/Icons/play.png')
+const ICON_AI     = require('../assets/images/Icons/AI.png')
 
 // Peg images for falling items
 const PEG_IMAGES = [
@@ -126,10 +130,29 @@ function Spark({x,y,sz,delay,emoji,color}:any){
   )
 }
 
+const LANGUAGES = [
+  {code:'en',flag:'🇬🇧',label:'EN'},
+  {code:'fr',flag:'🇫🇷',label:'FR'},
+  {code:'de',flag:'🇩🇪',label:'DE'},
+  {code:'es',flag:'🇪🇸',label:'ES'},
+  {code:'zh',flag:'🇨🇳',label:'ZH'},
+  {code:'ja',flag:'🇯🇵',label:'JA'},
+  {code:'ko',flag:'🇰🇷',label:'KO'},
+] as const;
+
 export default function LoginScreen(){
+  const {t}=useTranslation();
   const {connect,connecting,connected}=useWallet()
   const [showPrivacy,setShowPrivacy]=useState(false)
   const [showTerms,setShowTerms]=useState(false)
+  const [currentLang,setCurrentLang]=useState(i18n.language||'en')
+
+  const switchLang=async(code:string)=>{
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    i18n.changeLanguage(code)
+    setCurrentLang(code)
+    try{ await AsyncStorage.setItem('@lang',code) }catch{}
+  }
   useEffect(()=>{if(connected&&!connecting)router.replace('/')},[connected,connecting])
 
   const ringRot=useRef(new Animated.Value(0)).current
@@ -190,16 +213,16 @@ export default function LoginScreen(){
               transform:[{scale:ringScale}],borderWidth:3,borderColor:'rgba(255,255,255,0.3)',
               shadowColor:'#fff',shadowRadius:18,shadowOpacity:0.5}}/>
             <View style={st.logoCircle}>
-              <Image source={require('../assets/images/NewLogo.png')} style={{width:140,height:140,borderRadius:70}} resizeMode="cover"/>
+              <Image source={require('../assets/images/log.png')} style={{width:140,height:140,borderRadius:70}} resizeMode="cover"/>
             </View>
           </View>
 
           {/* TITLE */}
           <Animated.View style={{transform:[{translateY:titleY}],opacity:titleOp,alignItems:'center'}}>
-            <Text style={st.titleShadow}>SEEKERCRAFT</Text>
-            <Text style={st.title}>SEEKERCRAFT</Text>
+            <Text style={st.titleShadow}>{t('seekercraft')}</Text>
+            <Text style={st.title}>{t('seekercraft')}</Text>
             <View style={st.subtitlePill}>
-              <Text style={st.subtitleText}>SHOOT · BUILD · CONQUER</Text>
+              <Text style={st.subtitleText}>{t('tagline')}</Text>
             </View>
           </Animated.View>
 
@@ -207,13 +230,14 @@ export default function LoginScreen(){
           <View style={st.featuresCard}>
             <LinearGradient colors={['rgba(153,69,255,0.18)','rgba(0,212,255,0.08)']} style={{...StyleSheet.absoluteFillObject,borderRadius:24}}/>
             {[
-              {icon:ICON_PLAY,   text:'Shoot pegs, hit SKR to win!',   c:C.yellow},
-              {icon:ICON_COPPA,  text:'Climb global leaderboards',      c:C.mint},
-              {icon:ICON_BROWSE, text:'Play community-made levels',     c:C.cyan},
-              {icon:ICON_SAVE,   text:'Publish your own creations',     c:C.orange},
-              {icon:ICON_STELLA, text:'Duel players head-to-head',      c:C.coral},
+              {icon:ICON_PLAY,   text:t('feature_shoot'),   c:C.yellow},
+              {icon:ICON_COPPA,  text:t('feature_leaderboard'),      c:C.mint},
+              {icon:ICON_BROWSE, text:t('feature_community'),     c:C.cyan},
+              {icon:ICON_SAVE,   text:t('feature_publish'),     c:C.orange},
+              {icon:ICON_STELLA, text:t('feature_duel'),      c:C.coral},
+              {icon:ICON_AI,     text:t('feature_ai'),        c:C.purple},
             ].map((f,i)=>(
-              <View key={i} style={{flexDirection:'row',alignItems:'center',gap:10,marginBottom:i<4?10:0}}>
+              <View key={i} style={{flexDirection:'row',alignItems:'center',gap:10,marginBottom:i<5?10:0}}>
                 <View style={{width:44,height:44,borderRadius:12,
                   backgroundColor:`${f.c}22`,borderWidth:2,borderColor:`${f.c}55`,
                   alignItems:'center',justifyContent:'center'}}>
@@ -242,34 +266,47 @@ export default function LoginScreen(){
                   {connecting?(
                     <View style={{flexDirection:'row',alignItems:'center',gap:12}}>
                       <ActivityIndicator color="#fff" size="small"/>
-                      <Text style={st.connectText}>CONNECTING...</Text>
+                      <Text style={st.connectText}>{t('connecting')}</Text>
                     </View>
                   ):(
-                    <Text style={st.connectText}>CONNECT WALLET</Text>
+                    <Text style={st.connectText}>{t('connect_wallet')}</Text>
                   )}
                 </LinearGradient>
               </View>
             </TouchableOpacity>
           </View>
 
-          {/* Supported wallets */}
-          <Text style={{color:'rgba(255,255,255,0.4)',fontFamily:'monospace',fontSize:10,textAlign:'center',marginBottom:8}}>
-            Phantom · Solflare · Backpack · WalletConnect
-          </Text>
+          {/* LANGUAGE FLAGS */}
+          <View style={{flexDirection:'row',gap:6,marginBottom:10,flexWrap:'wrap',justifyContent:'center'}}>
+            {LANGUAGES.map(l=>{
+              const active=currentLang.startsWith(l.code);
+              return(
+                <TouchableOpacity key={l.code} onPress={()=>switchLang(l.code)}
+                  style={{paddingHorizontal:8,paddingVertical:5,borderRadius:12,
+                    backgroundColor:active?'rgba(255,230,0,0.18)':'rgba(255,255,255,0.08)',
+                    borderWidth:active?2:1,borderColor:active?C.yellow:'rgba(255,255,255,0.15)',
+                    flexDirection:'row',alignItems:'center',gap:3}}>
+                  <Text style={{fontSize:16}}>{l.flag}</Text>
+                  <Text style={{color:active?C.yellow:'rgba(255,255,255,0.6)',fontSize:10,
+                    fontFamily:'monospace',fontWeight:active?'900':'600'}}>{l.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
           {/* Legal links */}
           <View style={{flexDirection:'row',justifyContent:'center',gap:18,marginBottom:10}}>
             <TouchableOpacity onPress={()=>setShowPrivacy(true)}>
-              <Text style={st.linkText}>Privacy Policy</Text>
+              <Text style={st.linkText}>{t('privacy_title')}</Text>
             </TouchableOpacity>
             <Text style={st.linkText}>·</Text>
             <TouchableOpacity onPress={()=>setShowTerms(true)}>
-              <Text style={st.linkText}>Terms of Service</Text>
+              <Text style={st.linkText}>{t('terms_title')}</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={{color:'rgba(255,255,255,0.12)',fontFamily:'monospace',fontSize:8,textAlign:'center',marginBottom:20}}>
-            © 2025 DuckerForge · SeekerCraft
+            {t('copyright')}
           </Text>
 
         </ScrollView>
@@ -282,7 +319,7 @@ export default function LoginScreen(){
             padding:24,maxHeight:'75%',borderTopWidth:3,borderColor:C.cyan}}>
             <LinearGradient colors={['rgba(0,212,255,0.12)','transparent']} style={StyleSheet.absoluteFill}/>
             <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-              <Text style={{color:C.cyan,fontFamily:'monospace',fontWeight:'900',fontSize:16}}>PRIVACY POLICY</Text>
+              <Text style={{color:C.cyan,fontFamily:'monospace',fontWeight:'900',fontSize:16}}>{t('privacy_title')}</Text>
               <TouchableOpacity onPress={()=>setShowPrivacy(false)}
                 style={{width:34,height:34,borderRadius:17,backgroundColor:'rgba(255,255,255,0.12)',alignItems:'center',justifyContent:'center'}}>
                 <Text style={{color:'rgba(255,255,255,0.7)',fontSize:18,fontWeight:'900'}}>✕</Text>
@@ -304,7 +341,7 @@ export default function LoginScreen(){
             padding:24,maxHeight:'75%',borderTopWidth:3,borderColor:C.yellow}}>
             <LinearGradient colors={['rgba(255,230,0,0.10)','transparent']} style={StyleSheet.absoluteFill}/>
             <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-              <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:16}}>TERMS OF SERVICE</Text>
+              <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:16}}>{t('terms_title')}</Text>
               <TouchableOpacity onPress={()=>setShowTerms(false)}
                 style={{width:34,height:34,borderRadius:17,backgroundColor:'rgba(255,255,255,0.12)',alignItems:'center',justifyContent:'center'}}>
                 <Text style={{color:'rgba(255,255,255,0.7)',fontSize:18,fontWeight:'900'}}>✕</Text>
@@ -317,7 +354,7 @@ export default function LoginScreen(){
             </ScrollView>
             <TouchableOpacity onPress={()=>setShowTerms(false)} style={{marginTop:16,borderRadius:14,overflow:'hidden'}}>
               <LinearGradient colors={[C.yellow,C.orange]} style={{paddingVertical:14,alignItems:'center'}}>
-                <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:14,letterSpacing:1}}>I AGREE  →</Text>
+                <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:14,letterSpacing:1}}>{t('i_agree')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

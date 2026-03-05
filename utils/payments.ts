@@ -30,7 +30,7 @@ export const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${heliusKey
 export const CLUSTER      = 'mainnet-beta' as const
 
 // ─── PRICES ──────────────────────────────────────────────────────────────────
-export const PUBLISH_FEE_USD     = 0.50
+export const PUBLISH_FEE_USD     = 0.25  // $0.25 USD converted to SOL at current price
 export const ACHIEVEMENT_FEE_USD = 0.50
 
 // ─── TOKEN PRICES ────────────────────────────────────────────────────────────
@@ -155,7 +155,7 @@ const doSOLPayment = async (
   return { txSig, solPaid: totalSOL }
 }
 
-// ─── PUBLISH FEE ($1.00 → 90% dev, 10% pool) ─────────────────────────────
+// ─── PUBLISH FEE ($0.25 USD → 90% dev, 10% pool) ─────────────────────────────
 export const payPublishFee = async (userWallet: string): Promise<PaymentResult> => {
   try {
     const { txSig, solPaid } = await doSOLPayment(PUBLISH_FEE_USD, [

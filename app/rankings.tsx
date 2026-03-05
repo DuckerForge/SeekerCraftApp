@@ -15,12 +15,13 @@ import {
   getAllChallenges, getDuelRecord, getPublicGames,
   acceptChallenge, declineChallenge, submitChallengeResult,
   markChallengeNotificationSeen, logActivity,
-  getOrCreateUser, getUserAchievements,
+  getOrCreateUser, getUserAchievements, getReplay,
 } from '@/utils/firebase';
 import { ACHIEVEMENTS } from '@/utils/achievements';
 import { useWallet } from '@/utils/walletContext';
 import { payDonation, getSKRPriceUSD, getSKRBalance } from '@/utils/payments';
 import StickmanBuilder from '@/components/StickmanBuilder';
+import { useTranslation } from 'react-i18next';
 
 const { width: SW } = Dimensions.get('window');
 const ICON_COPPA = require('../assets/images/Icons/coppa.png');
@@ -45,6 +46,7 @@ const MEDAL_COLS=[
 ];
 
 export default function RankingsScreen(){
+  const {t}=useTranslation();
   const { tab: initialTab } = useLocalSearchParams<{tab?:string}>();
   const backPlayer=useAudioPlayer(require('../assets/images/tools/back.mp3'));
   const swordPlayer=useAudioPlayer(require('../assets/sword.mp3'));
@@ -207,6 +209,18 @@ export default function RankingsScreen(){
     setProfileLoading(false);
   };
 
+  const watchReplay=async(ch:any,wallet:string)=>{
+    try{
+      const shots=await getReplay(ch.id,wallet);
+      if(!shots||shots.length===0){Alert.alert('No Replay','No replay data found for this duel.');return;}
+      await AsyncStorage.setItem('replay_shots',JSON.stringify(shots));
+      await AsyncStorage.setItem('replay_mode','1');
+      await AsyncStorage.setItem('community_game',JSON.stringify({id:ch.gameId,name:ch.gameName,levels:[]}));
+      await AsyncStorage.setItem('community_game_id',ch.gameId);
+      router.push('/game-play');
+    }catch(err:any){Alert.alert('Error',err?.message||'Could not load replay');}
+  };
+
   if(loading){
     return(
       <LinearGradient colors={['#001A4D','#003080','#9945FF']} style={{flex:1,alignItems:'center',justifyContent:'center'}}>
@@ -312,6 +326,22 @@ export default function RankingsScreen(){
           <View style={{flexDirection:'row',gap:16,marginTop:6}}>
             <Text style={{color:'#fff',fontFamily:'monospace',fontSize:11}}>You: {typeof myScore==='number'?myScore.toLocaleString():'—'}</Text>
             <Text style={{color:'rgba(255,255,255,0.5)',fontFamily:'monospace',fontSize:11}}>vs {typeof theirScore==='number'?theirScore.toLocaleString():'—'}</Text>
+          </View>
+        )}
+        {isComplete&&(
+          <View style={{flexDirection:'row',gap:8,marginTop:10}}>
+            <TouchableOpacity onPress={()=>watchReplay(ch,user?.walletAddress||'')}
+              style={{flex:1,borderRadius:12,overflow:'hidden',borderWidth:2,borderColor:`${C.cyan}50`,backgroundColor:`${C.cyan}12`}}>
+              <View style={{paddingVertical:9,alignItems:'center',flexDirection:'row',justifyContent:'center',gap:6}}>
+                <Text style={{color:C.cyan,fontFamily:'monospace',fontSize:11,fontWeight:'900'}}>MY REPLAY</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=>watchReplay(ch,isChallenger?ch.challengedWallet:ch.challengerWallet)}
+              style={{flex:1,borderRadius:12,overflow:'hidden',borderWidth:2,borderColor:`${C.purple}50`,backgroundColor:`${C.purple}12`}}>
+              <View style={{paddingVertical:9,alignItems:'center',flexDirection:'row',justifyContent:'center',gap:6}}>
+                <Text style={{color:C.purple,fontFamily:'monospace',fontSize:11,fontWeight:'900'}}>THEIR REPLAY</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         )}
         {needsAccept&&(

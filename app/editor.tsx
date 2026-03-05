@@ -19,14 +19,15 @@ import { Canvas, Path as SkiaPath, Skia, Line, Circle as SkiaCircle, RoundedRect
 import { useAudioPlayer } from 'expo-audio';
 import Slider from '@react-native-community/slider';
 import Tutorial from '@/components/Tutorial';
+import { useTranslation } from 'react-i18next';
 
 const { width: SW } = Dimensions.get('window');
-const COLS = 12;
-const ROWS = 16;
+const COLS = 11;
+const ROWS = 19;
 const CELL = Math.floor((SW - 40) / COLS);
 
 const C = {
-  bg1:'#0D0028', bg2:'#1A0840',
+  bg1:'#001A4D', bg2:'#003080',
   yellow:'#FFE600', orange:'#FF8C00', coral:'#FF4D6D',
   mint:'#00F0B5', cyan:'#00D4FF', purple:'#9945FF',
   pink:'#FF69B4', blue:'#3B7DFF', lime:'#8BFF00',
@@ -34,26 +35,26 @@ const C = {
   gridLine:'rgba(0,212,255,0.18)',
   gridDot:'rgba(0,240,181,0.35)',
   gridBorder:'rgba(0,212,255,0.55)',
-  surface:'rgba(255,255,255,0.06)',
+  surface:'rgba(255,255,255,0.15)',
   text:'#FFF', textMuted:'rgba(255,255,255,0.5)',
 };
 
 const ELEMENTS: Record<string, {
-  color: string; label: string; image?: any; emoji?: string;
-  desc: string; size?: '1x1' | '2x2';
+  color: string; labelKey: string; image?: any; emoji?: string;
+  descKey: string; size?: '1x1' | '2x2';
 }> = {
-  empty:       { color:'transparent', label:'Erase',    image:require('../assets/images/tools/erase.png'), desc:'Erase element from cell. Tap a cell to remove it.' },
-  peg_red:     { color:C.orange,      label:'BTC',      image:require('../assets/images/Peg/btc.png'),     desc:'BTC peg – optional, worth bonus pts when hit.' },
-  peg_blue:    { color:C.blue,        label:'SOL',      image:require('../assets/images/Peg/sol.png'),     desc:'SOL peg – 30% chance to trigger Multiball, Fireball or Slow Bucket.' },
-  peg_gold:    { color:C.gold,        label:'SKR',      image:require('../assets/images/Peg/skr.png'),     desc:'SKR peg – REQUIRED. Hit ALL SKR pegs to complete the level!' },
-  bumper:      { color:C.green,       label:'Star',     image:require('../assets/images/Peg/bump.png'),    desc:'Star bumper – powerful bounce, never disappears.' },
-  bumper_big:  { color:C.green,       label:'Big Star', image:require('../assets/images/Peg/BigStar.png'), desc:'Big Star 2x2 – occupies 4 cells, double bounce force. Always stays.', size:'2x2' },
-  obstacle:    { color:C.gray,        label:'Wall',     image:require('../assets/images/Peg/walls.jpg'),   desc:'Solid wall – blocks the ball completely.' },
-  curved_left: { color:'#7B2FBE',     label:'Vortex',   image:require('../assets/images/Peg/curva.png'),  desc:'Vortex – captures the ball for 0.8s then launches it randomly.' },
-  teleport_a:  { color:'#00D4FF',     label:'Teleport', image:require('../assets/images/Peg/TeleportA.png'),  desc:'Teleport – tap first cell (A entry), then second cell (B exit). Ball teleports A→B and B→A.' },
-  moving_block:{ color:'#64748B',     label:'Moving',   image:require('../assets/images/Peg/moving.png'), desc:'Moving block – slides horizontally, deflects the ball.' },
-  curve_track: { color:'#9B30FF',     label:'Track',    image:require('../assets/images/tools/track.png'), desc:'Track rail – tap A then B. Rotate with slider below.' },
-  bucket:      { color:C.blue,        label:'Bucket',   image:require('../assets/images/Peg/bucket.png'), desc:'Free Ball bucket – tap to choose bucket style for your level.' },
+  empty:       { color:'transparent', labelKey:'element_erase',    image:require('../assets/images/tools/erase.png'), descKey:'element_erase_desc' },
+  peg_red:     { color:C.orange,      labelKey:'element_btc',      image:require('../assets/images/Peg/btc.png'),     descKey:'element_btc_desc' },
+  peg_blue:    { color:C.blue,        labelKey:'element_sol',      image:require('../assets/images/Peg/sol.png'),     descKey:'element_sol_desc' },
+  peg_gold:    { color:C.gold,        labelKey:'element_skr',      image:require('../assets/images/Peg/skr.png'),     descKey:'element_skr_desc' },
+  bumper:      { color:C.green,       labelKey:'element_star',     image:require('../assets/images/Peg/bump.png'),    descKey:'element_star_desc' },
+  bumper_big:  { color:C.green,       labelKey:'element_big_star', image:require('../assets/images/Peg/BigStar.png'), descKey:'element_big_star_desc', size:'2x2' },
+  obstacle:    { color:C.gray,        labelKey:'element_wall',     image:require('../assets/images/Peg/walls.jpg'),   descKey:'element_wall_desc' },
+  curved_left: { color:'#7B2FBE',     labelKey:'element_vortex',   image:require('../assets/images/Peg/curva.png'),  descKey:'element_vortex_desc' },
+  teleport_a:  { color:'#00D4FF',     labelKey:'element_teleport', image:require('../assets/images/Peg/TeleportA.png'),  descKey:'element_teleport_desc' },
+  moving_block:{ color:'#64748B',     labelKey:'element_moving',   image:require('../assets/images/Peg/moving.png'), descKey:'element_moving_desc' },
+  curve_track: { color:'#9B30FF',     labelKey:'element_track',    image:require('../assets/images/tools/track.png'), descKey:'element_track_desc' },
+  bucket:      { color:C.blue,        labelKey:'element_bucket',   image:require('../assets/images/Peg/bucket.png'), descKey:'element_bucket_desc' },
 };
 
 type GridCell = keyof typeof ELEMENTS;
@@ -65,6 +66,7 @@ const emptyGrid = (): GridCell[][] =>
   Array(ROWS).fill(null).map(() => Array(COLS).fill('empty'));
 
 export default function EditorScreen() {
+  const {t}=useTranslation();
   // ── HOOKS ─────────────────────────────────────────────────────────────────
   const selecttPlayer   = useAudioPlayer(require('../assets/selectt.mp3'));
   const selectgPlayer   = useAudioPlayer(require('../assets/selectg.mp3'));
@@ -90,22 +92,28 @@ export default function EditorScreen() {
   const [musicMuted,       setMusicMuted]       = useState(false);
   const [selectedCurve,    setSelectedCurve]    = useState<number|null>(null); // which curve is selected for rotation
   const [movingCurveIdx,   setMovingCurveIdx]   = useState<number|null>(null); // which curve is being dragged
+  const [editorTutStep,    setEditorTutStep]    = useState<number|null>(null); // null = done/hidden
 
-  // Music control — stop global main.mp3, play only edit.mp3
-  useFocusEffect(useCallback(() => {
-    const { DeviceEventEmitter } = require('react-native');
-    DeviceEventEmitter.emit('PAUSE_GLOBAL_MUSIC');
-    if (!musicMuted) {
-      editMusicPlayer.loop = true;
-      editMusicPlayer.play();
-    }
-    return () => {
-      try { editMusicPlayer.pause?.(); } catch {}
-      DeviceEventEmitter.emit('RESUME_GLOBAL_MUSIC');
-    };
-  }, [musicMuted]));
+  // Global main.mp3 continues through editor (no separate edit music)
 
-  useEffect(() => { loadLevel(); }, []);
+  useEffect(() => {
+    loadLevel();
+    // First-time editor tutorial
+    AsyncStorage.getItem('@editor_tutorial_done').then(v => {
+      if (!v) setEditorTutStep(0);
+    }).catch(() => {});
+    // Log live activity: editing a level
+    (async () => {
+      try {
+        const addr = await AsyncStorage.getItem('wallet_address');
+        const dname = await AsyncStorage.getItem('display_name') || addr?.slice(0, 6) || 'anon';
+        if (addr) {
+          const { logActivity } = require('@/utils/firebase');
+          logActivity(addr, dname, 'level_editing');
+        }
+      } catch {}
+    })();
+  }, []);
 
   // Auto-save
   useEffect(() => {
@@ -176,7 +184,17 @@ export default function EditorScreen() {
       if (d) {
         const data: LevelData = JSON.parse(d);
         setName(data.name || 'My Level');
-        if (data.grid?.length) setGrid(data.grid);
+        if (data.grid?.length) {
+          // Pad existing levels to current ROWS if they have fewer rows
+          const g = data.grid;
+          while (g.length < ROWS) g.push(Array(COLS).fill('empty'));
+          // Ensure each row has exactly COLS columns (trim or pad)
+          for (let r = 0; r < g.length; r++) {
+            while (g[r].length < COLS) g[r].push('empty');
+            if (g[r].length > COLS) g[r] = g[r].slice(0, COLS);
+          }
+          setGrid(g);
+        }
         if (data.balls) setBalls(data.balls);
         if (data.curves) setCurves(data.curves);
         if (data.curveRotations) setCurveRotations(data.curveRotations);
@@ -197,12 +215,12 @@ export default function EditorScreen() {
       await AsyncStorage.setItem('current_level_draft', JSON.stringify(d));
       if (levelId) await AsyncStorage.setItem(levelId, JSON.stringify(d));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Saved!', 'Level saved locally');
-    } catch { Alert.alert('Error', 'Failed to save level'); }
+      Alert.alert(t('saved'), t('level_saved'));
+    } catch { Alert.alert(t('error'), t('save_error')); }
   };
 
   const handleClear = () => {
-    Alert.alert('Clear Grid?', 'Delete all elements and curves.', [
+    Alert.alert(t('clear_grid_title'), t('clear_grid_msg'), [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Clear', style: 'destructive', onPress: () => {
         saveToHistory(grid, curves, curveRotations);
@@ -216,7 +234,7 @@ export default function EditorScreen() {
   const handlePlayTest = async () => {
     const skrCount = grid.flat().filter(c => c === 'peg_gold').length;
     if (skrCount === 0) {
-      Alert.alert('Missing SKR!', 'You need at least one SKR peg in the level to play!');
+      Alert.alert(t('missing_skr_title'), t('missing_skr_msg'));
       return;
     }
     try {
@@ -380,7 +398,7 @@ export default function EditorScreen() {
               placed = true;
             }
           }
-        if (!placed) { Alert.alert('No space!', 'BigStar requires a 2x2 free area.'); return; }
+        if (!placed) { Alert.alert(t('no_space_title'), t('no_space_msg')); return; }
       }
     } else {
       ng[r][c] = ng[r][c] === tool ? 'empty' : tool;
@@ -437,9 +455,7 @@ export default function EditorScreen() {
   // ── RENDER ────────────────────────────────────────────────────────────────
   return (
     <View style={{ flex:1 }}>
-    <ImageBackground source={require('../assets/images/Peg/wallpaper/editor.jpg')} style={StyleSheet.absoluteFill} resizeMode="cover">
-      <LinearGradient colors={['rgba(10,0,30,0.85)','rgba(5,0,50,0.80)','rgba(8,0,24,0.88)']} style={StyleSheet.absoluteFill}/>
-    </ImageBackground>
+    <LinearGradient colors={['#001A4D','#003080','#9945FF']} locations={[0,0.5,1]} style={StyleSheet.absoluteFill}/>
     {/* Ambient glow blobs */}
     <View style={{position:'absolute',top:-60,left:-60,width:220,height:220,borderRadius:110,backgroundColor:'rgba(153,69,255,0.15)'}} pointerEvents="none"/>
     <View style={{position:'absolute',top:80,right:-40,width:160,height:160,borderRadius:80,backgroundColor:'rgba(0,212,255,0.12)'}} pointerEvents="none"/>
@@ -456,7 +472,8 @@ export default function EditorScreen() {
         <TouchableOpacity onPress={() => {
           const next = !musicMuted; setMusicMuted(next);
           AsyncStorage.setItem('global_muted', next ? '1' : '0');
-          try { next ? editMusicPlayer.pause?.() : editMusicPlayer.play(); } catch {}
+          const { DeviceEventEmitter } = require('react-native');
+          DeviceEventEmitter.emit('MUTE_CHANGED', { muted: next });
         }} style={st.iconBtn}>
           <Text style={{ fontSize:15 }}>{musicMuted ? '🔇' : '🔊'}</Text>
         </TouchableOpacity>
@@ -464,7 +481,7 @@ export default function EditorScreen() {
           <Text style={{ fontSize:17 }}>❓</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleSave} style={st.saveBtn}>
-          <Text style={st.saveBtnText}>SAVE</Text>
+          <Text style={st.saveBtnText}>{t('save')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -474,7 +491,7 @@ export default function EditorScreen() {
     {/* TOOLBAR */}
     <View style={{ padding:12 }}>
       <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-        <Text style={st.toolLabel}>{curveStart ? '📍 TAP THE END POINT (B)' : teleportStart ? '🔵 NOW TAP EXIT POINT (B)' : 'SELECT TOOL'}</Text>
+        <Text style={st.toolLabel}>{curveStart ? `📍 ${t('tap_end_b')}` : teleportStart ? `🔵 ${t('tap_exit_b')}` : t('select_tool')}</Text>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -510,16 +527,16 @@ export default function EditorScreen() {
                 {el.size === '2x2' && (
                   <View style={st.sizeBadge}><Text style={st.sizeBadgeText}>2x2</Text></View>
                 )}
-                <Text style={[st.toolName, { color: sel ? C.cyan : C.textMuted }]}>{el.label}</Text>
+                <Text style={[st.toolName, { color: sel ? C.cyan : C.textMuted }]}>{t(el.labelKey)}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
       </ScrollView>
 
-      {ELEMENTS[tool]?.desc && (
+      {ELEMENTS[tool]?.descKey && (
         <View style={st.descBox}>
-          <Text style={st.descText}>{ELEMENTS[tool].desc}</Text>
+          <Text style={st.descText}>{t(ELEMENTS[tool].descKey)}</Text>
         </View>
       )}
     </View>
@@ -527,7 +544,7 @@ export default function EditorScreen() {
     {/* STATS & BALLS */}
     <View style={{ paddingHorizontal:12, marginBottom:10, flexDirection:'row', gap:8 }}>
       <View style={st.statCard}>
-        <Text style={st.statTitle}>BALLS</Text>
+        <Text style={st.statTitle}>{t('balls')}</Text>
         <View style={{ flexDirection:'row', alignItems:'center', justifyContent:'space-between' }}>
           <TouchableOpacity onPress={() => setBalls(Math.max(1, balls-1))}><Text style={st.bigBtn}>-</Text></TouchableOpacity>
           <Text style={st.statVal}>{balls}</Text>
@@ -557,7 +574,7 @@ export default function EditorScreen() {
         <View style={st.colLabels}>
           {Array.from({ length: COLS }).map((_, c) => (
             <View key={`cl${c}`} style={{ width: CELL, alignItems:'center' }}>
-              <Text style={st.coordText}>{c}</Text>
+              <Text style={st.coordText}>{c+1}</Text>
             </View>
           ))}
         </View>
@@ -567,7 +584,7 @@ export default function EditorScreen() {
           <View style={st.rowLabels}>
             {Array.from({ length: ROWS }).map((_, r) => (
               <View key={`rl${r}`} style={{ height: CELL, justifyContent:'center', alignItems:'center', width:18 }}>
-                <Text style={st.coordText}>{r}</Text>
+                <Text style={st.coordText}>{r+1}</Text>
               </View>
             ))}
           </View>
@@ -669,7 +686,7 @@ export default function EditorScreen() {
        ═══════════════════════════════════════════════════════════════════════ */}
     {curves.length > 0 && (
       <View style={st.rotationPanel}>
-        <Text style={st.rotationTitle}>TRACK CONTROLS</Text>
+        <Text style={st.rotationTitle}>{t('track_controls')}</Text>
 
         {/* Track selector */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:10 }}>
@@ -693,7 +710,7 @@ export default function EditorScreen() {
         {selectedCurve !== null && (
           <View>
             <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-              <Text style={st.sliderLabel}>ROTATION</Text>
+              <Text style={st.sliderLabel}>{t('rotation')}</Text>
               <Text style={st.sliderValue}>{Math.round(curveRotations[selectedCurve] || 0)}°</Text>
             </View>
             <Slider
@@ -716,7 +733,7 @@ export default function EditorScreen() {
             />
             {/* MOVE TRACK: nudge by 1 cell in any direction */}
             <View style={{ marginTop:10, marginBottom:4 }}>
-              <Text style={[st.sliderLabel, { marginBottom:6 }]}>MOVE TRACK</Text>
+              <Text style={[st.sliderLabel, { marginBottom:6 }]}>{t('move_track')}</Text>
               {/* Up/Down row */}
               <View style={{ alignItems:'center', marginBottom:4 }}>
                 <TouchableOpacity onPress={() => {
@@ -757,12 +774,12 @@ export default function EditorScreen() {
                 setCurveRotations(newRots);
                 saveToHistory(grid, curves, newRots);
               }} style={st.resetRotBtn}>
-                <Text style={st.resetRotText}>RESET 0°</Text>
+                <Text style={st.resetRotText}>{t('reset_rotation')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => {
-                Alert.alert('Delete Track?', `Remove Track ${selectedCurve! + 1}?`, [
-                  { text:'Cancel', style:'cancel' },
-                  { text:'Delete', style:'destructive', onPress:() => {
+                Alert.alert(t('delete_track_title'), t('delete_track_msg', {n: selectedCurve! + 1}), [
+                  { text:t('cancel'), style:'cancel' },
+                  { text:t('delete'), style:'destructive', onPress:() => {
                     saveToHistory(grid, curves, curveRotations);
                     const nc = curves.filter((_, i) => i !== selectedCurve);
                     const nr = curveRotations.filter((_, i) => i !== selectedCurve);
@@ -770,7 +787,7 @@ export default function EditorScreen() {
                   }},
                 ]);
               }} style={st.deleteTrackBtn}>
-                <Text style={st.deleteTrackText}>DELETE TRACK</Text>
+                <Text style={st.deleteTrackText}>{t('delete_track')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -781,13 +798,13 @@ export default function EditorScreen() {
     {/* FOOTER */}
     <View style={st.footer}>
       <TouchableOpacity onPress={() => { playBack(); undo(); }} activeOpacity={0.75} style={st.undoBtn}>
-        <Text style={st.undoBtnText}>↩{'\n'}UNDO</Text>
+        <Text style={st.undoBtnText}>↩{'\n'}{t('undo')}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => { playBack(); redo(); }} activeOpacity={0.75} style={st.redoBtn}>
-        <Text style={st.redoBtnText}>↪{'\n'}REDO</Text>
+        <Text style={st.redoBtnText}>↪{'\n'}{t('redo')}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => { playStart(); handlePlayTest(); }} activeOpacity={0.8} style={st.playBtn}>
-        <Text style={st.playBtnText}>▶  PLAY TEST</Text>
+        <Text style={st.playBtnText}>▶  {t('play_test')}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleClear} activeOpacity={0.75} style={st.clearBtn}>
         <Image source={require('../assets/images/tools/bin.png')} style={{ width:26, height:26, resizeMode:'contain' }}/>
@@ -799,11 +816,49 @@ export default function EditorScreen() {
 
     <Tutorial visible={showTutorial} onClose={() => setShowTutorial(false)}/>
 
+    {/* FIRST-TIME EDITOR TUTORIAL OVERLAY */}
+    {editorTutStep != null && (
+      <View style={{ position:'absolute', top:0, left:0, right:0, bottom:0, backgroundColor:'rgba(0,0,0,0.75)', justifyContent:'center', alignItems:'center', zIndex:999 }}>
+        <View style={{ backgroundColor:'#140830', borderRadius:24, padding:28, width:'85%', borderWidth:2.5, borderColor:C.cyan,
+          shadowColor:C.cyan, shadowRadius:20, shadowOpacity:0.6 }}>
+          <Text style={{ color:C.yellow, fontSize:20, fontWeight:'900', fontFamily:'monospace', textAlign:'center', marginBottom:6 }}>
+            {editorTutStep === 0 ? '1/4' : editorTutStep === 1 ? '2/4' : editorTutStep === 2 ? '3/4' : '4/4'}
+          </Text>
+          <Text style={{ color:'#fff', fontSize:42, textAlign:'center', marginBottom:10 }}>
+            {editorTutStep === 0 ? '🎨' : editorTutStep === 1 ? '👆' : editorTutStep === 2 ? '⭐' : '▶️'}
+          </Text>
+          <Text style={{ color:'#fff', fontSize:15, fontWeight:'900', fontFamily:'monospace', textAlign:'center', marginBottom:8 }}>
+            {editorTutStep === 0 ? t('tut_step_1_title') : editorTutStep === 1 ? t('tut_step_2_title') : editorTutStep === 2 ? t('tut_step_3_title') : t('tut_step_4_title')}
+          </Text>
+          <Text style={{ color:'rgba(255,255,255,0.65)', fontSize:11, fontFamily:'monospace', textAlign:'center', lineHeight:18, marginBottom:20 }}>
+            {editorTutStep === 0 ? t('tut_step_1_desc') : editorTutStep === 1 ? t('tut_step_2_desc') : editorTutStep === 2 ? t('tut_step_3_desc') : t('tut_step_4_desc')}
+          </Text>
+          <View style={{ flexDirection:'row', gap:10 }}>
+            <TouchableOpacity onPress={() => { setEditorTutStep(null); AsyncStorage.setItem('@editor_tutorial_done','1').catch(()=>{}); }}
+              style={{ flex:1, padding:12, borderRadius:14, backgroundColor:'rgba(255,255,255,0.08)', alignItems:'center', borderWidth:1.5, borderColor:'rgba(255,255,255,0.2)' }}>
+              <Text style={{ color:'rgba(255,255,255,0.5)', fontWeight:'900', fontFamily:'monospace', fontSize:12 }}>{t('skip')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+              if (editorTutStep < 3) { setEditorTutStep(editorTutStep + 1); }
+              else { setEditorTutStep(null); AsyncStorage.setItem('@editor_tutorial_done','1').catch(()=>{}); }
+            }}
+              style={{ flex:2, borderRadius:14, overflow:'hidden' }}>
+              <LinearGradient colors={[C.cyan, '#0088CC']} style={{ padding:12, alignItems:'center' }}>
+                <Text style={{ color:'#fff', fontWeight:'900', fontFamily:'monospace', fontSize:14 }}>
+                  {editorTutStep < 3 ? t('tut_next') : t('tut_got_it')}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )}
+
     {/* BUCKET SKIN PICKER */}
     <Modal visible={showBucketPicker} transparent animationType="fade">
       <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.78)', justifyContent:'center', alignItems:'center' }}>
         <View style={{ backgroundColor:'#0D0040', borderRadius:20, padding:24, width:'82%', borderWidth:1.5, borderColor:'rgba(0,212,255,0.4)' }}>
-          <Text style={{ color:C.cyan, fontSize:18, fontWeight:'900', fontFamily:'monospace', textAlign:'center', marginBottom:6 }}>CHOOSE BUCKET</Text>
+          <Text style={{ color:C.cyan, fontSize:18, fontWeight:'900', fontFamily:'monospace', textAlign:'center', marginBottom:6 }}>{t('choose_bucket')}</Text>
           <Text style={{ color:C.textMuted, fontSize:10, fontFamily:'monospace', textAlign:'center', marginBottom:18 }}>Select which bucket will appear in your level</Text>
           <View style={{ flexDirection:'row', justifyContent:'space-around', marginBottom:20 }}>
             {(['bucket','bucket2','bucket3'] as const).map(bk => (
@@ -818,14 +873,14 @@ export default function EditorScreen() {
                                    require('../assets/images/Peg/bucket3.png')
                 } style={{ width:72, height:38, resizeMode:'contain' }}/>
                 <Text style={{ color: selectedBucket===bk ? C.cyan : C.textMuted, fontSize:9, fontFamily:'monospace', marginTop:6 }}>
-                  {bk==='bucket'?'CLASSIC':bk==='bucket2'?'ENERGY':'LAVA'}
+                  {bk==='bucket'?t('bucket_classic'):bk==='bucket2'?t('bucket_energy'):t('bucket_lava')}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
           <TouchableOpacity onPress={() => setShowBucketPicker(false)}
             style={{ padding:12, borderRadius:10, backgroundColor:'rgba(255,255,255,0.06)', alignItems:'center' }}>
-            <Text style={{ color:C.textMuted, fontWeight:'bold', fontFamily:'monospace' }}>CANCEL</Text>
+            <Text style={{ color:C.textMuted, fontWeight:'bold', fontFamily:'monospace' }}>{t('cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>

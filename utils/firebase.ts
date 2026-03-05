@@ -148,7 +148,7 @@ export const publishGame = async (walletAddress: string, gameData: any) => {
 
 export const recordGamePlay = async (gameId: string, walletAddress: string) => {
   await update(ref(database, `games/public/${gameId}`), { plays: increment(1) });
-  await updateUserStats(walletAddress, { levelsPlayed: 1, minutesPlayed: 3 });
+  await updateUserStats(walletAddress, { levelsPlayed: 1 });
 };
 
 export const recordGameCompletion = async (
@@ -183,7 +183,7 @@ export const submitRating = async (
   const gameSnap = await get(ref(database, `games/public/${gameId}`));
   if (gameSnap.exists()) {
     const g = gameSnap.val();
-    const newRating = (g.votesSum + stars) / (g.votesCount + 1);
+    const newRating = g.votesSum / g.votesCount; // Already incremented above
     await update(ref(database, `games/public/${gameId}`), { rating: Math.round(newRating * 10) / 10 });
   }
 
@@ -272,7 +272,8 @@ export type ActivityType =
   | 'name_changed' | 'game_created' | 'level_completed'
   | 'achievement_unlocked' | 'game_published' | 'joined'
   | 'challenge_sent' | 'challenge_won' | 'access_key_bought'
-  | 'donation_sent';
+  | 'donation_sent' | 'level_editing'
+  | 'ai_win' | 'ai_loss';
 
 export const logActivity = async (
   walletAddress: string,
@@ -456,15 +457,130 @@ export const getDuelRecord = async (walletAddress: string): Promise<{ wins: numb
   Object.values(snap.val()).forEach((c: any) => {
     if (c.status !== 'completed') return
     if (c.challengerWallet !== walletAddress && c.challengedWallet !== walletAddress) return
-    if (c.winnerWallet === walletAddress) wins++
-    else if (c.challengerScore === c.challengedScore) draws++
+    if (c.challengerScore === c.challengedScore) draws++
+    else if (c.winnerWallet === walletAddress) wins++
     else losses++
   })
   return { wins, losses, draws }
+}
+
+// ── Daily Check-in ──────────────────────────────────────────────────────────
+export const claimDailyCheckIn = async (walletAddress: string): Promise<{
+  newStreak: number; points: number; alreadyClaimed: boolean;
+}> => {
+  const today = new Date().toISOString().slice(0, 10)
+  const userRef = ref(database, `users/${walletAddress}`)
+  const snap = await get(userRef)
+  const data = snap.exists() ? snap.val() : {}
+  const lastDate = data.lastCheckInDate || ''
+  const oldStreak = data.checkInStreak || 0
+
+  if (lastDate === today) return { newStreak: oldStreak, points: 0, alreadyClaimed: true }
+
+  // Check if streak continues (yesterday) or resets
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  const newStreak = lastDate === yesterday ? oldStreak + 1 : 1
+
+  // Reward tiers
+  const REWARDS: Record<number, number> = { 1: 10, 3: 25, 7: 100, 14: 250, 30: 500 }
+  const points = REWARDS[newStreak] || 10
+
+  await update(userRef, {
+    lastCheckInDate: today,
+    checkInStreak: newStreak,
+  })
+  await updateUserStats(walletAddress, { score: points })
+
+  return { newStreak, points, alreadyClaimed: false }
+}
+
+export const getDailyCheckInStatus = async (walletAddress: string): Promise<{
+  lastDate: string; streak: number;
+}> => {
+  const snap = await get(ref(database, `users/${walletAddress}`))
+  if (!snap.exists()) return { lastDate: '', streak: 0 }
+  const data = snap.val()
+  return { lastDate: data.lastCheckInDate || '', streak: data.checkInStreak || 0 }
+}
+
+// ── Replay System ──────────────────────────────────────────────────────────
+export interface ShotRecord {
+  angle: number;
+  bonusUsed: string | null;
+  pegsHitCount: number;
+  score: number;
+}
+
+export const saveReplay = async (challengeId: string, walletAddress: string, shots: ShotRecord[]) => {
+  try {
+    await set(ref(database, `challenges/${challengeId}/replays/${walletAddress.replace(/\./g, '_')}`), {
+      shots: JSON.stringify(shots),
+      savedAt: Date.now(),
+    })
+  } catch {}
+}
+
+export const getReplay = async (challengeId: string, walletAddress: string): Promise<ShotRecord[]> => {
+  try {
+    const snap = await get(ref(database, `challenges/${challengeId}/replays/${walletAddress.replace(/\./g, '_')}`))
+    if (!snap.exists()) return []
+    return JSON.parse(snap.val().shots || '[]')
+  } catch { return [] }
 }
 
 export const getPublicGames = async (): Promise<any[]> => {
   const snap = await get(ref(database, 'games/public'))
   if (!snap.exists()) return []
   return Object.entries(snap.val()).map(([id, data]: any) => ({ id, ...data }))
+}
+
+// ─── FEATURED REPLAYS ─────────────────────────────────────────────────────
+export const saveFeaturedReplay = async (
+  replay: {
+    shots: ShotRecord[];
+    gameId: string;
+    gameName: string;
+    walletAddress: string;
+    displayName: string;
+    combo: number;
+    pegsHit: number;
+    shotScore: number;
+  }
+) => {
+  try {
+    const newRef = push(ref(database, 'replays/featured'))
+    await set(newRef, {
+      ...replay,
+      shots: JSON.stringify(replay.shots),
+      timestamp: Date.now(),
+      votes: 0,
+      voters: {},
+    })
+  } catch {}
+}
+
+export const getFeaturedReplays = async (limit = 10): Promise<any[]> => {
+  try {
+    const snap = await get(ref(database, 'replays/featured'))
+    if (!snap.exists()) return []
+    const all = Object.entries(snap.val()).map(([id, data]: any) => ({ id, ...data }))
+    // Sort by votes desc, filter to last 7 days
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+    return all
+      .filter((r: any) => r.timestamp > weekAgo)
+      .sort((a: any, b: any) => (b.votes || 0) - (a.votes || 0))
+      .slice(0, limit)
+  } catch { return [] }
+}
+
+export const voteReplay = async (replayId: string, walletAddress: string) => {
+  try {
+    const voterKey = walletAddress.replace(/\./g, '_')
+    const voterRef = ref(database, `replays/featured/${replayId}/voters/${voterKey}`)
+    const snap = await get(voterRef)
+    if (snap.exists()) return false // already voted
+    await set(voterRef, true)
+    await update(ref(database, `replays/featured/${replayId}`), { votes: increment(1) })
+    return true
+  } catch { return false }
 }

@@ -77,10 +77,17 @@ function InnerProviders({ children }: PropsWithChildren) {
     return () => { delete (global as any).showAchievement }
   }, [])
 
+  // Process queue with a small delay between toasts so they don't flash rapidly
   useEffect(() => {
     if (!pendingAch && queue.length > 0) {
-      setPendingAch(queue[0])
-      setQueue(prev => prev.slice(1))
+      const t = setTimeout(() => {
+        setQueue(prev => {
+          if (prev.length === 0) return prev
+          setPendingAch(prev[0])
+          return prev.slice(1)
+        })
+      }, 600)
+      return () => clearTimeout(t)
     }
   }, [pendingAch, queue])
 

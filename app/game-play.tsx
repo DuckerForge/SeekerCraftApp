@@ -11,6 +11,7 @@ import { payDonation, getSKRPriceUSD, getSKRBalance } from '@/utils/payments';
 import { useWallet } from '@/utils/walletContext';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
+import { useTranslation } from 'react-i18next';
 
 const ICON_PLAY = require('../assets/images/Icons/play.png');
 
@@ -86,6 +87,7 @@ const checkMilestoneAchievements = (counts: {
 };
 
 export default function GamePlayScreen() {
+  const {t}=useTranslation();
   const startPlayer = useAudioPlayer(require('../assets/images/tools/Start.mp3'));
   const backPlayer  = useAudioPlayer(require('../assets/images/tools/back.mp3'));
   // Alternating level music tracks (music2-5, no main.mp3 which is the global loop)
@@ -387,7 +389,7 @@ export default function GamePlayScreen() {
   if (!game) {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: C.text, fontFamily: 'monospace' }}>Game not found</Text>
+        <Text style={{ color: C.text, fontFamily: 'monospace' }}>{t('game_not_found')}</Text>
       </View>
     );
   }
@@ -396,7 +398,7 @@ export default function GamePlayScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <LinearGradient colors={[C.bg1, C.bg2]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={['#001A4D', '#003080', '#9945FF']} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       
 <SafeAreaView style={{ flex: 1 }}>
         {/* Header */}
@@ -412,7 +414,7 @@ export default function GamePlayScreen() {
         >
           <TouchableOpacity onPress={exitGame}>
             <Text style={{ color: C.gold, fontSize: 14, fontWeight: 'bold', fontFamily: 'monospace' }}>
-              ← EXIT
+              ← {t('exit')}
             </Text>
           </TouchableOpacity>
 
@@ -421,7 +423,7 @@ export default function GamePlayScreen() {
               {game.name}
             </Text>
             <Text style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace', marginTop: 2 }}>
-              Level {currentLevelIndex + 1} / {game.levels.length}{timerActive ? `  ·  ${Math.floor(elapsedSeconds/60)}:${String(elapsedSeconds%60).padStart(2,'0')}` : ''}
+              {t('level_n_of',{n:currentLevelIndex+1,total:game.levels.length})}{timerActive ? `  ·  ${Math.floor(elapsedSeconds/60)}:${String(elapsedSeconds%60).padStart(2,'0')}` : ''}
             </Text>
           </View>
 
@@ -455,30 +457,32 @@ export default function GamePlayScreen() {
                 textAlign: 'center',
               }}
             >
-              by {game.creator?.slice(0, 8) || 'Anonymous'}
+              {t('by_creator',{name:game.creator?.slice(0, 8) || t('anonymous')})}
             </Text>
 
             <View
               style={{
-                backgroundColor: C.card,
+                backgroundColor: 'rgba(0,26,77,0.7)',
                 borderRadius: 12,
                 padding: 20,
                 width: '100%',
                 borderWidth: 1,
-                borderColor: C.cardBorder,
+                borderColor: 'rgba(153,69,255,0.3)',
                 marginBottom: 20,
               }}
             >
               <Text
                 style={{
-                  color: C.orange,
+                  color: '#9945FF',
                   fontSize: 12,
                   fontFamily: 'monospace',
+                  fontWeight: '900',
+                  letterSpacing: 2,
                   marginBottom: 10,
                   textAlign: 'center',
                 }}
               >
-                GAME PROGRESS
+                {t('game_progress')}
               </Text>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
@@ -487,7 +491,7 @@ export default function GamePlayScreen() {
                     {currentLevelIndex + 1}
                   </Text>
                   <Text style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace' }}>
-                    CURRENT
+                    {t('current')}
                   </Text>
                 </View>
 
@@ -496,7 +500,7 @@ export default function GamePlayScreen() {
                     {game.levels.length}
                   </Text>
                   <Text style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace' }}>
-                    TOTAL
+                    {t('total')}
                   </Text>
                 </View>
 
@@ -505,7 +509,7 @@ export default function GamePlayScreen() {
                     {totalScore}
                   </Text>
                   <Text style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace' }}>
-                    SCORE
+                    {t('score')}
                   </Text>
                 </View>
               </View>
@@ -519,11 +523,13 @@ export default function GamePlayScreen() {
                   overflow: 'hidden',
                 }}
               >
-                <View
+                <LinearGradient
+                  colors={['#9945FF', '#00D4FF']}
+                  start={{x:0,y:0}} end={{x:1,y:0}}
                   style={{
                     height: '100%',
                     width: `${((currentLevelIndex + 1) / game.levels.length) * 100}%`,
-                    backgroundColor: C.gold,
+                    borderRadius: 4,
                   }}
                 />
               </View>
@@ -547,12 +553,12 @@ export default function GamePlayScreen() {
                 <View
                   key={index}
                   style={{
-                    backgroundColor: index === currentLevelIndex ? C.orange + '20' : C.surface,
+                    backgroundColor: index === currentLevelIndex ? 'rgba(153,69,255,0.2)' : 'rgba(0,26,77,0.5)',
                     borderRadius: 10,
                     padding: 12,
                     marginBottom: 8,
                     borderWidth: 1,
-                    borderColor: index === currentLevelIndex ? C.orange : 'rgba(255,255,255,0.05)',
+                    borderColor: index === currentLevelIndex ? 'rgba(153,69,255,0.5)' : 'rgba(255,255,255,0.06)',
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -569,7 +575,7 @@ export default function GamePlayScreen() {
                       <Text style={{ color: C.green, fontSize: 18 }}>✓</Text>
                     )}
                     {index === currentLevelIndex && (
-                      <Text style={{ color: C.orange, fontSize: 18 }}>▶</Text>
+                      <Text style={{ color: '#9945FF', fontSize: 18 }}>▶</Text>
                     )}
                     {index > currentLevelIndex && (
                       <Text style={{ color: C.textMuted, fontSize: 18 }}>🔒</Text>
@@ -585,29 +591,29 @@ export default function GamePlayScreen() {
       {/* Modal Level Complete */}
       <Modal visible={showLevelComplete} transparent animationType="slide">
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.88)', justifyContent:'flex-end' }}>
-          <View style={{ backgroundColor:'#0B0033', borderTopLeftRadius:28, borderTopRightRadius:28, padding:28, paddingBottom:44, borderTopWidth:1.5, borderColor:'rgba(20,241,149,0.4)' }}>
-            <LinearGradient colors={['rgba(20,241,149,0.12)','rgba(153,69,255,0.08)']} style={{ position:'absolute',top:0,left:0,right:0,bottom:0,borderTopLeftRadius:28,borderTopRightRadius:28 }}/>
+          <View style={{ backgroundColor:'#001A4D', borderTopLeftRadius:28, borderTopRightRadius:28, padding:28, paddingBottom:44, borderTopWidth:1.5, borderColor:'rgba(0,212,255,0.6)' }}>
+            <LinearGradient colors={['rgba(0,212,255,0.15)','rgba(153,69,255,0.10)','#001A4D']} style={{ position:'absolute',top:0,left:0,right:0,bottom:0,borderTopLeftRadius:28,borderTopRightRadius:28 }}/>
             <Text style={{ fontSize:52, textAlign:'center', marginBottom:10 }}>⭐</Text>
             <Text style={{ color:'#14F195', fontSize:22, fontWeight:'900', fontFamily:'monospace', textAlign:'center', letterSpacing:2, marginBottom:6 }}>
-              LEVEL CLEARED!
+              {t('level_cleared')}
             </Text>
             <Text style={{ color:'rgba(255,255,255,0.55)', fontFamily:'monospace', fontSize:12, textAlign:'center', marginBottom:20 }}>
-              Level {currentLevelIndex + 1} of {game?.levels.length || 1}
+              {t('level_n_of_short',{n:currentLevelIndex+1,total:game?.levels.length||1})}
             </Text>
             <View style={{ backgroundColor:'rgba(255,215,0,0.08)', borderRadius:12, padding:14, marginBottom:20, borderWidth:1, borderColor:'rgba(255,215,0,0.2)', alignItems:'center' }}>
-              <Text style={{ color:'rgba(255,255,255,0.5)', fontFamily:'monospace', fontSize:10 }}>LEVEL SCORE</Text>
+              <Text style={{ color:'rgba(255,255,255,0.5)', fontFamily:'monospace', fontSize:10 }}>{t('level_score')}</Text>
               <Text style={{ color:'#FFD700', fontSize:32, fontWeight:'900', fontFamily:'monospace', marginTop:2 }}>
                 +{levelScore.toLocaleString()}
               </Text>
               <Text style={{ color:'rgba(255,255,255,0.4)', fontFamily:'monospace', fontSize:10, marginTop:4 }}>
-                Total: {(totalScore + levelScore).toLocaleString()} pts
+                {t('run_total',{score:(totalScore + levelScore).toLocaleString()})}
               </Text>
             </View>
             {currentLevelIndex + 1 < (game?.levels.length || 1) ? (
               <TouchableOpacity onPress={() => { playStart(); nextLevel(); }} style={{ borderRadius:14, overflow:'hidden', marginBottom:10 }}>
                 <LinearGradient colors={['#14F195','#3B82F6']} start={{x:0,y:0}} end={{x:1,y:0}} style={{ paddingVertical:16, alignItems:'center' }}>
                   <Text style={{ color:'#000', fontWeight:'900', fontFamily:'monospace', fontSize:16, letterSpacing:1 }}>
-                    ▶  NEXT LEVEL  ({currentLevelIndex + 2}/{game?.levels.length})
+                    ▶  {t('next_level',{n:currentLevelIndex+2,total:game?.levels.length})}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -615,7 +621,7 @@ export default function GamePlayScreen() {
               <TouchableOpacity onPress={() => { playStart(); nextLevel(); }} style={{ borderRadius:14, overflow:'hidden', marginBottom:10 }}>
                 <LinearGradient colors={['#FFD700','#FF9500']} start={{x:0,y:0}} end={{x:1,y:0}} style={{ paddingVertical:16, alignItems:'center' }}>
                   <Text style={{ color:'#000', fontWeight:'900', fontFamily:'monospace', fontSize:16, letterSpacing:1 }}>
-                    🏆  COMPLETE GAME
+                    🏆  {t('complete_game')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -626,15 +632,13 @@ export default function GamePlayScreen() {
 
       {/* Modal Level Start */}
       <Modal visible={showLevelStart} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center', padding: 30 }}>
-          <View style={{ borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(153,69,255,0.3)' }}>
-            <LinearGradient colors={['rgba(153,69,255,0.15)','#0B0033','#040012']} style={{ padding: 30, alignItems: 'center' }}>
-
-            <Image source={ICON_PLAY} style={{ width: 70, height: 70, marginBottom: 16 }} />
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.88)', justifyContent: 'center', padding: 30 }}>
+          <View style={{ borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(153,69,255,0.5)' }}>
+            <LinearGradient colors={['#9945FF','#003080','#001A4D']} style={{ padding: 30, alignItems: 'center' }}>
 
             <View style={{ backgroundColor: 'rgba(255,215,0,0.12)', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 6, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,215,0,0.25)' }}>
               <Text style={{ color: C.gold, fontSize: 12, fontWeight: '900', fontFamily: 'monospace', letterSpacing: 2 }}>
-                LEVEL {currentLevelIndex + 1} of {game?.levels?.length || '?'}
+                {t('level_n_of_short',{n:currentLevelIndex+1,total:game?.levels?.length||'?'})}
               </Text>
             </View>
 
@@ -643,13 +647,13 @@ export default function GamePlayScreen() {
             </Text>
 
             <View style={{ flexDirection: 'row', gap: 16, marginBottom: 24 }}>
-              <View style={{ alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-                <Text style={{ color: C.textMuted, fontSize: 8, fontFamily: 'monospace' }}>BALLS</Text>
+              <View style={{ alignItems: 'center', backgroundColor: 'rgba(0,26,77,0.6)', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(153,69,255,0.25)' }}>
+                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 8, fontFamily: 'monospace' }}>{t('balls')}</Text>
                 <Text style={{ color: '#14F195', fontSize: 22, fontWeight: '900', fontFamily: 'monospace' }}>{currentLevel?.balls || 10}</Text>
               </View>
               {totalScore > 0 && (
-                <View style={{ alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-                  <Text style={{ color: C.textMuted, fontSize: 8, fontFamily: 'monospace' }}>TOTAL SCORE</Text>
+                <View style={{ alignItems: 'center', backgroundColor: 'rgba(0,26,77,0.6)', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(153,69,255,0.25)' }}>
+                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 8, fontFamily: 'monospace' }}>{t('total_score_modal')}</Text>
                   <Text style={{ color: C.gold, fontSize: 22, fontWeight: '900', fontFamily: 'monospace' }}>{totalScore.toLocaleString()}</Text>
                 </View>
               )}
@@ -659,9 +663,8 @@ export default function GamePlayScreen() {
               onPress={() => { playStart(); startLevel(); }}
               style={{ width: '100%', borderRadius: 14, overflow: 'hidden' }}
             >
-              <LinearGradient colors={['#9945FF','#6A1FC2']} style={{ paddingVertical: 16, alignItems: 'center', borderRadius: 14, flexDirection:'row', justifyContent:'center', gap:10 }}>
-                <Image source={ICON_PLAY} style={{ width: 22, height: 22, resizeMode:'contain' }}/>
-                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 16, fontFamily: 'monospace', letterSpacing: 1 }}>
+              <LinearGradient colors={['#9945FF','#6A1FC2']} style={{ paddingVertical: 16, alignItems: 'center', borderRadius: 14 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 16, fontFamily: 'monospace', letterSpacing: 2 }}>
                   START
                 </Text>
               </LinearGradient>
@@ -676,10 +679,10 @@ export default function GamePlayScreen() {
       <Modal visible={showGameComplete} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center', padding: 24 }}>
           <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-          <View style={{ borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(255,215,0,0.3)' }}>
-            <LinearGradient colors={['rgba(255,215,0,0.12)','#0B0033','#040012']} style={{ padding: 26, alignItems: 'center' }}>
+          <View style={{ borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(255,215,0,0.5)' }}>
+            <LinearGradient colors={['rgba(255,215,0,0.15)','#001A4D','#003080']} style={{ padding: 26, alignItems: 'center' }}>
 
-            <Image source={ICON_PLAY} style={{ width: 90, height: 90, marginBottom: 12 }} />
+            <Text style={{ fontSize: 52, textAlign: 'center', marginBottom: 8 }}>🏆</Text>
             <Text style={{ color: C.gold, fontSize: 22, fontWeight: '900', fontFamily: 'monospace', marginBottom: 4, textAlign: 'center', textShadowColor: '#FFD700', textShadowRadius: 16 }}>
               GAME COMPLETE!
             </Text>

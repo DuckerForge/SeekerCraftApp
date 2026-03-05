@@ -21,6 +21,7 @@ import { getTreasuryBalance } from '@/utils/payments';
 import StickmanBuilder from '@/components/StickmanBuilder';
 import AchievementToast from '@/components/AchievementToast';
 import { useAudioPlayer } from 'expo-audio';
+import { useTranslation } from 'react-i18next';
 
 const ICON_NEW_GAME = require('../assets/images/Icons/NewGame.png');
 const ICON_MY_GAMES = require('../assets/images/Icons/MyGames.png');
@@ -29,6 +30,7 @@ const ICON_COPPA    = require('../assets/images/Icons/coppa.png');
 const ICON_STELLA   = require('../assets/images/Icons/stella.png');
 const ICON_PLAY     = require('../assets/images/Icons/play.png');
 const ICON_DUEL     = require('../assets/images/Icons/duel.png');
+const ICON_AI       = require('../assets/images/Icons/AI.png');
 const ICON_TIPS     = require('../assets/images/Icons/tips.png');
 const BG_IMAGE      = require('../assets/images/sfondo.jpg');
 const LOGO          = require('../assets/images/NewLogo.png');
@@ -114,7 +116,7 @@ function CandyBtn({icon,label,sub,c1,c2,shadow,onPress,badge,stretch}:{
             <Text style={{color:'rgba(255,255,255,0.85)',fontSize:28,fontWeight:'900'}}>›</Text>
           </LinearGradient>
         </View>
-        {badge&&badge>0?(
+        {badge!=null&&badge>0?(
           <View style={{position:'absolute',top:-8,right:12,backgroundColor:C.coral,
             borderRadius:14,paddingHorizontal:9,paddingVertical:4,
             borderWidth:3,borderColor:'#fff',shadowColor:C.coral,shadowRadius:8,shadowOpacity:1}}>
@@ -126,7 +128,7 @@ function CandyBtn({icon,label,sub,c1,c2,shadow,onPress,badge,stretch}:{
   );
 }
 
-function GridBtn({icon,label,color,onPress}:{icon:any;label:string;color:string;onPress:()=>void;}){
+function GridBtn({icon,label,color,onPress,badge}:{icon:any;label:string;color:string;onPress:()=>void;badge?:number;}){
   const sc=useRef(new Animated.Value(1)).current;
   return(
     <Animated.View style={{transform:[{scale:sc}],flex:1}}>
@@ -151,12 +153,16 @@ function GridBtn({icon,label,color,onPress}:{icon:any;label:string;color:string;
           textShadowColor:'rgba(0,0,0,0.7)',textShadowRadius:6}}>
           {label}
         </Text>
+        {badge!=null&&badge>0?<View style={{position:'absolute',top:4,right:4,backgroundColor:C.coral,borderRadius:12,paddingHorizontal:7,paddingVertical:3,borderWidth:2,borderColor:'#fff'}}>
+          <Text style={{color:'#fff',fontSize:10,fontWeight:'900'}}>{badge}</Text>
+        </View>:null}
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
 export default function HomeScreen(){
+  const {t}=useTranslation();
   const {user,connected,sessionLoading}=useWallet();
   const [showNewGame,setShowNewGame]=useState(false);
   const [newGameName,setNewGameName]=useState('');
@@ -190,8 +196,9 @@ export default function HomeScreen(){
     AsyncStorage.getItem('global_muted').then(v=>{if(v==='1')setGlobalMuted(true);});
     getNews().then(n=>{setNews(n);setNewsLoading(false);}).catch(()=>setNewsLoading(false));
     if(user?.walletAddress){
-      hasSeenOnboarding(user.walletAddress).then(seen=>{if(!seen)setShowWelcome(true);}).catch(()=>{});
+      hasSeenOnboarding(user.walletAddress).then(seen=>{if(!seen&&!showWelcome){setShowWelcome(true);markOnboardingDone(user.walletAddress).catch(()=>{});}}).catch(()=>{});
       getChallengeNotifications(user.walletAddress).then(n=>setChallengeCount(n.length)).catch(()=>{});
+      // Daily check-in
     }
     getTreasuryBalance().then(t=>setTreasury(t)).catch(()=>{});
     const ti=setInterval(()=>getTreasuryBalance().then(t=>setTreasury(t)).catch(()=>{}),30000);
@@ -223,7 +230,7 @@ export default function HomeScreen(){
 
   const handleNewGame=async()=>{
     const trimmed=newGameName.trim();
-    if(!trimmed){Alert.alert('Name required','Give your level a name!');return;}
+    if(!trimmed){Alert.alert(t('name_required_title'),t('name_required_msg'));return;}
     try{
       const id=`game_${Date.now()}`;
       const gj=await AsyncStorage.getItem('my_games');
@@ -302,20 +309,20 @@ export default function HomeScreen(){
             <View style={{position:'absolute',top:0,width:SW*0.9,height:90,
               backgroundColor:C.orange,borderRadius:45,opacity:0.18,
               shadowColor:C.orange,shadowRadius:50,shadowOpacity:1}}/>
-            <Text style={st.titleShadow}>SEEKERCRAFT</Text>
-            <Text style={st.title}>SEEKERCRAFT</Text>
+            <Text style={st.titleShadow}>{t('seekercraft')}</Text>
+            <Text style={st.title}>{t('seekercraft')}</Text>
             <View style={st.pill}>
               <Text style={{color:'#fff',fontSize:11,fontFamily:'monospace',fontWeight:'900',letterSpacing:3}}>
-                SHOOT · BUILD · CONQUER
+                {t('tagline')}
               </Text>
             </View>
 
             {user&&(
               <View style={st.statsRow}>
                 {[
-                  {icon:ICON_PLAY,  val:fmtNum(user.totalScore||0),           lbl:'PTS',    c:C.yellow,  sz:48},
-                  {icon:ICON_COPPA, val:String(user.levelsCompleted||0),       lbl:'WINS',   c:C.mint,    sz:48},
-                  {icon:ICON_STELLA,val:String(Object.keys(user.achievements||{}).length),lbl:'MEDALS',c:C.cyan,sz:48},
+                  {icon:ICON_PLAY,  val:fmtNum(user.totalScore||0),           lbl:t('stat_pts'),    c:C.yellow,  sz:48},
+                  {icon:ICON_COPPA, val:String(user.levelsCompleted||0),       lbl:t('stat_wins'),   c:C.mint,    sz:48},
+                  {icon:ICON_STELLA,val:String(Object.keys(user.achievements||{}).length),lbl:t('stat_medals'),c:C.cyan,sz:48},
                 ].map((s,i)=>(
                   <React.Fragment key={i}>
                     {i>0&&<View style={{width:1,height:36,backgroundColor:'rgba(255,255,255,0.18)'}}/>}
@@ -334,14 +341,14 @@ export default function HomeScreen(){
 
           {/* MAIN ACTIONS */}
           <View style={st.actions}>
-            <CandyBtn icon={ICON_PLAY} label="PLAY NOW" sub="Browse community levels →"
-              c1="#FF8C00" c2="#FF2D6B" shadow={C.coral} stretch badge={challengeCount}
+            <CandyBtn icon={ICON_PLAY} label={t('play_now')} sub={t('play_now_sub')}
+              c1="#FF8C00" c2="#FF2D6B" shadow={C.coral} stretch
               onPress={()=>{playStart();router.push('/browse');}}/>
             <View style={{flexDirection:'row',gap:10}}>
-              <CandyBtn icon={ICON_NEW_GAME} label="EDIT MODE"
+              <CandyBtn icon={ICON_NEW_GAME} label={t('edit_mode')}
                 c1="#9945FF" c2="#00D4FF" shadow={C.purple}
                 onPress={()=>{playStart();setShowNewGame(true);}}/>
-              <CandyBtn icon={ICON_MY_GAMES} label="MY LEVELS"
+              <CandyBtn icon={ICON_MY_GAMES} label={t('my_levels')}
                 c1="#00C896" c2="#3B7DFF" shadow={C.mint}
                 onPress={async()=>{
                   playStart();
@@ -365,40 +372,18 @@ export default function HomeScreen(){
                       }
                     }catch{}
                   }
-                  if(games.length===0){Alert.alert('No levels yet!','Create your first level.');return;}
+                  if(games.length===0){Alert.alert(t('no_levels_title'),t('no_levels_msg'));return;}
                   if(games.length===1){await AsyncStorage.setItem('current_game_id',games[0].id);router.push('/my-levels');}
                   else{setMyGamesList(games);setShowMyGames(true);}
                 }}/>
             </View>
             <View style={{flexDirection:'row',gap:10}}>
-              <GridBtn icon={ICON_COPPA}   label="RANKINGS"     color={C.yellow} onPress={()=>{playStart();router.push('/rankings');}}/>
-              <GridBtn icon={ICON_STELLA}  label="BADGES"       color={C.mint}   onPress={()=>{playStart();router.push({pathname:'/settings',params:{tab:'achievements'}});}}/>
-              <GridBtn icon={ICON_DUEL}    label="PVP"          color={C.coral}  onPress={()=>{playSword();router.push({pathname:'/rankings',params:{tab:'duels'}});}}/>
+              <GridBtn icon={ICON_COPPA}   label={t('rankings_btn')} color={C.yellow} onPress={()=>{playStart();router.push('/rankings');}}/>
+              <GridBtn icon={ICON_STELLA}  label={t('badges_btn')} color={C.mint}   onPress={()=>{playStart();router.push({pathname:'/settings',params:{tab:'achievements'}});}}/>
+              <GridBtn icon={ICON_DUEL}    label={t('pvp')}      color={C.coral}  badge={challengeCount} onPress={()=>{playSword();router.push({pathname:'/rankings',params:{tab:'duels'}});}}/>
+              <GridBtn icon={ICON_AI}      label={t('vs_ai')}    color={C.purple} onPress={()=>{playStart();router.push('/vs-ai');}}/>
             </View>
           </View>
-
-          {/* NEWS */}
-          {!newsLoading&&news.length>0&&(
-            <View style={{marginBottom:16}}>
-              <View style={st.secHead}>
-                <View style={{width:8,height:8,borderRadius:4,backgroundColor:C.mint,shadowColor:C.mint,shadowRadius:8,shadowOpacity:1}}/>
-                <Text style={st.secTitle}>📡  LATEST NEWS</Text>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{gap:10,paddingHorizontal:16,paddingBottom:4}}>
-                {news.map(item=>(
-                  <TouchableOpacity key={item.id} onPress={()=>setSelectedNews(item)}
-                    style={st.newsCard} activeOpacity={0.85}>
-                    {item.tag&&<View style={[st.tag,{borderColor:newsTagColor(item.tag)}]}>
-                      <Text style={[st.tagText,{color:newsTagColor(item.tag)}]}>{item.tag.toUpperCase()}</Text>
-                    </View>}
-                    <Text style={st.newsTitle} numberOfLines={2}>{item.title}</Text>
-                    <Text style={st.newsBody} numberOfLines={2}>{item.body}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
 
           {/* LIVE ACTIVITY */}
           {feed.length>0&&(
@@ -406,8 +391,8 @@ export default function HomeScreen(){
               <View style={st.secHead}>
                 <View style={{width:8,height:8,borderRadius:4,backgroundColor:C.coral,shadowColor:C.coral,shadowRadius:8,shadowOpacity:1}}/>
                 <Image source={ICON_BROWSE} style={{width:34,height:34,resizeMode:'contain'}}/>
-                <Text style={st.secTitle}>LIVE ACTIVITY</Text>
-                <Text style={{color:C.mint,fontFamily:'monospace',fontSize:9,marginLeft:'auto',letterSpacing:1}}>● LIVE</Text>
+                <Text style={st.secTitle}>{t('live_activity')}</Text>
+                <Text style={{color:C.mint,fontFamily:'monospace',fontSize:9,marginLeft:'auto',letterSpacing:1}}>● {t('live')}</Text>
               </View>
               <View style={st.feedBox}>
                 {feed.slice(0,7).map((item,i)=>(
@@ -416,7 +401,9 @@ export default function HomeScreen(){
                       <Text style={{fontSize:12}}>{
                         item.type==='joined'?'👋':item.type==='level_completed'?'🏆':
                         item.type==='achievement_unlocked'?'🏅':item.type==='game_published'?'🌐':
-                        item.type==='challenge_won'?'🥇':item.type==='donation_sent'?'💝':'⚡'
+                        item.type==='challenge_won'?'🥇':item.type==='donation_sent'?'💝':
+                        item.type==='level_editing'?'🎨':item.type==='ai_win'?'🤖':
+                        item.type==='ai_loss'?'🤖':'⚡'
                       }</Text>
                     </View>
                     <Text style={st.feedMsg} numberOfLines={1}>{(()=>{
@@ -428,6 +415,9 @@ export default function HomeScreen(){
                         case'game_published': return`${n} published "${item.detail}"`;
                         case'challenge_won': return`🥇 ${n} won a duel`;
                         case'donation_sent': return`💝 ${n} donated to ${item.detail}`;
+                        case'level_editing': return`🎨 ${n} is creating a level`;
+                        case'ai_win': return`🤖 ${n} beat the AI! ${item.detail}`;
+                        case'ai_loss': return`🤖 ${n} lost to AI ${item.detail}`;
                         default: return`${n} is playing!`;
                       }
                     })()}</Text>
@@ -450,6 +440,7 @@ export default function HomeScreen(){
           </View>
         </ScrollView>
       </SafeAreaView>
+
 
       {/* WELCOME MODAL */}
       <Modal visible={showWelcome} transparent animationType="fade">

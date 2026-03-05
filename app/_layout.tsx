@@ -2,6 +2,7 @@
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import 'react-native-reanimated'
+import '@/utils/i18n'
 import { AppProviders } from '@/components/app-providers'
 
 export default function RootLayout() {
@@ -20,6 +21,7 @@ export default function RootLayout() {
         <Stack.Screen name="terms" />
         <Stack.Screen name="credits"          options={{ headerShown: false }}/>
         <Stack.Screen name="social"  options={{ headerShown: false }}/>
+        <Stack.Screen name="vs-ai"   options={{ headerShown: false }}/>
       </Stack>
       <StatusBar style="light" />
     </AppProviders>

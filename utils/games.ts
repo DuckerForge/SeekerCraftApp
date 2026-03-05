@@ -38,7 +38,7 @@ export const PUBLISH_SPLIT = { dev: 0.90, pool: 0.10 };
 export const DONATION_SPLIT = { creator: 0.70, dev: 0.20, pool: 0.10 };
 
 // ─── GRID ───
-export const COLS = 12;
+export const COLS = 11;
 export const ROWS = 16;
 export const GRID_PAD = 20;
 export const CELL = Math.floor((SW - GRID_PAD * 2) / COLS);

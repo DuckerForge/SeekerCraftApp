@@ -9,12 +9,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { update, ref } from 'firebase/database';
-import { logActivity, database, unlockAchievement } from '@/utils/firebase';
+import { logActivity, database, unlockAchievement, getDuelRecord } from '@/utils/firebase';
 import { payAchievementFee } from '@/utils/payments';
 import { useWallet } from '@/utils/walletContext';
+import BallSkinPicker from '@/components/BallSkinPicker';
 import { ACHIEVEMENTS, ACHIEVEMENT_MAP, RARITY_COLORS, type Rarity } from '@/utils/achievements';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer } from 'expo-audio';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/utils/i18n';
 
 const { width: SW } = Dimensions.get('window');
 const ICON_COPPA  = require('../assets/images/Icons/coppa.png');
@@ -31,6 +34,7 @@ const C = {
 };
 
 export default function SettingsScreen(){
+  const {t}=useTranslation();
   const {user,connected,disconnect,switchAccount,refreshUser}=useWallet();
   const [editingName,setEditingName]=useState(false);
   const [earnableKeys,setEarnableKeys]=useState<Set<string>>(new Set());
@@ -45,15 +49,20 @@ export default function SettingsScreen(){
     return()=>sub.remove();
   },[]);
   const playSkr=()=>{if(mutedRef.current)return;try{skrPlayer.seekTo(0);skrPlayer.play();}catch{}};
-  const [tab,setTab]=useState<'stats'|'achievements'|'wallet'|'privacy'>('stats');
+  const [tab,setTab]=useState<'stats'|'achievements'|'wallet'|'privacy'|'trophies'>('stats');
+  const [duelRecord,setDuelRecord]=useState({wins:0,losses:0,draws:0});
   const visitedTabsRef=useRef<Set<string>>(new Set(['stats']));
   const [achFilter,setAchFilter]=useState<string>('all');
   const [payingAch,setPayingAch]=useState<string|null>(null);
+  const [showBallSkins,setShowBallSkins]=useState(false);
+  const [selectedBallSkin,setSelectedBallSkin]=useState('default');
 
   useFocusEffect(useCallback(()=>{
     AsyncStorage.getItem('earnable_achievements').then(v=>{if(v){try{setEarnableKeys(new Set(JSON.parse(v)));}catch{}}});
     AsyncStorage.getItem('global_muted').then(v=>setMuted(v==='1'));
+    AsyncStorage.getItem('ball_skin_selected').then(v=>{if(v)setSelectedBallSkin(v);});
     refreshUser();
+    if(user?.walletAddress) getDuelRecord(user.walletAddress).then(setDuelRecord).catch(()=>{});
   },[]));
 
   const handleToggleMute=async(val:boolean)=>{
@@ -70,10 +79,10 @@ export default function SettingsScreen(){
       await refreshUser();
       setEditingName(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Name Updated','Your display name has been updated!');
+      Alert.alert(t('name_updated_title'),t('name_updated_msg'));
       logActivity(user.walletAddress,nameInput.trim(),'name_changed').catch(()=>{});
       try{(global as any).showAchievement?.('profile_complete');}catch{}
-    }catch{Alert.alert('Error','Could not update name');}
+    }catch{Alert.alert(t('error'),t('update_name_error'));}
   };
 
   const handlePayAchievement=async(key:string)=>{
@@ -81,19 +90,19 @@ export default function SettingsScreen(){
     setPayingAch(key);
     try{
       const addr=user?.walletAddress;
-      if(!addr){Alert.alert('Connect wallet first');setPayingAch(null);return;}
+      if(!addr){Alert.alert(t('connect_wallet_first'));setPayingAch(null);return;}
       const result=await payAchievementFee(addr);
       if(result.success){
         await unlockAchievement(addr,key);
         await refreshUser();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert('🏆 Achievement Unlocked!',ACHIEVEMENT_MAP[key]?.name||key);
+        Alert.alert(t('achievement_unlocked'),ACHIEVEMENT_MAP[key]?.name||key);
         setEarnableKeys(prev=>{const n=new Set(prev);n.delete(key);return n;});
         const stored=await AsyncStorage.getItem('earnable_achievements');
         const arr:string[]=stored?JSON.parse(stored):[];
         await AsyncStorage.setItem('earnable_achievements',JSON.stringify(arr.filter(k=>k!==key)));
-      }else{Alert.alert('Payment Failed',result.error||'Transaction rejected');}
-    }catch(err:any){Alert.alert('Error',err.message||'Could not process payment');}
+      }else{Alert.alert(t('payment_failed_title'),result.error||t('payment_failed_msg'));}
+    }catch(err:any){Alert.alert(t('error'),err.message||t('payment_error'));}
     setPayingAch(null);
   };
 
@@ -106,19 +115,19 @@ export default function SettingsScreen(){
   const hoursStr=minutesPlayed>=60?`${Math.floor(minutesPlayed/60)}h ${minutesPlayed%60}m`:`${minutesPlayed}m`;
 
   const TABS=[
-    {key:'stats',       label:'📊 STATS',    c:C.yellow},
-    {key:'achievements',label:'🏅 BADGES',   c:C.mint},
-    {key:'wallet',      label:'💳 WALLET',   c:C.cyan},
-    {key:'privacy',     label:'🔒 PRIVACY',  c:C.purple},
+    {key:'stats',       label:t('tab_stats'),    c:C.yellow},
+    {key:'achievements',label:t('tab_badges'),   c:C.mint},
+    {key:'trophies',    label:t('tab_trophies'), c:C.orange},
+    {key:'wallet',      label:t('tab_wallet'),   c:C.cyan},
+    {key:'privacy',     label:t('tab_privacy'),  c:C.purple},
   ] as const;
 
   const STAT_ITEMS=[
-    {label:'TOTAL SCORE',   val:(user?.totalScore||0).toLocaleString(), c:C.yellow},
-    {label:'WEEKLY SCORE',  val:(user?.weeklyScore||0).toLocaleString(),c:C.purple},
-    {label:'LEVELS PLAYED', val:String(user?.levelsPlayed||0),          c:C.cyan},
-    {label:'COMPLETED',     val:String(user?.levelsCompleted||0),        c:C.mint},
-    {label:'CREATED',       val:String(user?.levelsCreated||0),          c:C.orange},
-    {label:'TIME PLAYED',   val:hoursStr,                                c:C.pink},
+    {label:t('total_score'),   val:(user?.totalScore||0).toLocaleString(), c:C.yellow},
+    {label:t('levels_played'), val:String(user?.levelsPlayed||0),          c:C.cyan},
+    {label:t('completed'),     val:String(user?.levelsCompleted||0),        c:C.mint},
+    {label:t('created'),       val:String(user?.levelsCreated||0),          c:C.orange},
+    {label:t('time_played'),   val:hoursStr,                                c:C.pink},
   ];
 
   return(
@@ -132,10 +141,10 @@ export default function SettingsScreen(){
         <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:14,paddingVertical:10}}>
           <TouchableOpacity onPress={()=>router.back()} style={{borderRadius:14,overflow:'hidden'}}>
             <LinearGradient colors={[C.orange,C.coral]} style={{paddingHorizontal:14,paddingVertical:8}}>
-              <Text style={{color:'#fff',fontWeight:'900',fontFamily:'monospace',fontSize:12}}>← BACK</Text>
+              <Text style={{color:'#fff',fontWeight:'900',fontFamily:'monospace',fontSize:12}}>{t('back')}</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <Text style={{color:'#fff',fontSize:16,fontWeight:'900',fontFamily:'monospace',letterSpacing:3}}>PROFILE</Text>
+          <Text style={{color:'#fff',fontSize:16,fontWeight:'900',fontFamily:'monospace',letterSpacing:3}}>{t('profile')}</Text>
           <View style={{width:70}}/>
         </View>
 
@@ -160,17 +169,17 @@ export default function SettingsScreen(){
                     style={{flex:1,color:'#fff',fontFamily:'monospace',fontSize:14,
                       backgroundColor:'rgba(255,255,255,0.12)',borderRadius:12,
                       paddingHorizontal:12,paddingVertical:8,borderWidth:2,borderColor:`${C.yellow}60`}}
-                    autoFocus maxLength={20} placeholderTextColor="rgba(255,255,255,0.3)" placeholder="Enter name..."/>
+                    autoFocus maxLength={20} placeholderTextColor="rgba(255,255,255,0.3)" placeholder={t('enter_name')}/>
                   <TouchableOpacity onPress={handleSaveName} style={{borderRadius:12,overflow:'hidden'}}>
                     <LinearGradient colors={[C.yellow,C.orange]} style={{paddingHorizontal:14,paddingVertical:10}}>
-                      <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:12}}>SAVE</Text>
+                      <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:12}}>{t('save')}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
               ):(
                 <TouchableOpacity onPress={()=>{setNameInput(user?.displayName||'');setEditingName(true);}}>
-                  <Text style={{color:'#fff',fontSize:18,fontWeight:'900',fontFamily:'monospace'}}>{user?.displayName||'Anonymous'}</Text>
-                  <Text style={{color:'rgba(255,255,255,0.45)',fontSize:10,fontFamily:'monospace',marginTop:2}}>tap to edit name ✏️</Text>
+                  <Text style={{color:'#fff',fontSize:18,fontWeight:'900',fontFamily:'monospace'}}>{user?.displayName||t('anonymous')}</Text>
+                  <Text style={{color:'rgba(255,255,255,0.45)',fontSize:10,fontFamily:'monospace',marginTop:2}}>{t('tap_to_edit')}</Text>
                 </TouchableOpacity>
               )}
               <Text style={{color:'rgba(255,255,255,0.35)',fontSize:10,fontFamily:'monospace',marginTop:4}}>{shortAddr}</Text>
@@ -187,7 +196,7 @@ export default function SettingsScreen(){
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{paddingLeft:16,marginBottom:14}}>
             <View style={{flexDirection:'row',gap:8,paddingRight:16}}>
               {TABS.map(t=>(
-                <TouchableOpacity key={t.key} onPress={()=>{setTab(t.key);visitedTabsRef.current.add(t.key);if(visitedTabsRef.current.size>=4)try{(global as any).showAchievement?.('settings_explorer');}catch{}Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);if(t.key==='achievements')playSkr();}}
+                <TouchableOpacity key={t.key} onPress={()=>{setTab(t.key);visitedTabsRef.current.add(t.key);if(visitedTabsRef.current.size>=5)try{(global as any).showAchievement?.('settings_explorer');}catch{}Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);if(t.key==='achievements')playSkr();}}
                   style={{paddingHorizontal:16,paddingVertical:10,borderRadius:16,
                     backgroundColor:tab===t.key?`${t.c}20`:'rgba(255,255,255,0.08)',
                     borderWidth:2.5,borderColor:tab===t.key?t.c:'rgba(255,255,255,0.15)',
@@ -221,7 +230,7 @@ export default function SettingsScreen(){
                   <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
                     <View style={{flexDirection:'row',alignItems:'center',gap:8}}>
                       <Image source={ICON_COPPA} style={{width:22,height:22,resizeMode:'contain'}}/>
-                      <Text style={{color:'#fff',fontWeight:'900',fontFamily:'monospace',fontSize:13,letterSpacing:1}}>ACHIEVEMENTS</Text>
+                      <Text style={{color:'#fff',fontWeight:'900',fontFamily:'monospace',fontSize:13,letterSpacing:1}}>{t('achievements')}</Text>
                     </View>
                     <Text style={{color:C.yellow,fontFamily:'monospace',fontSize:13,fontWeight:'900'}}>{unlockedCount} / {totalCount}</Text>
                   </View>
@@ -230,11 +239,32 @@ export default function SettingsScreen(){
                       start={{x:0,y:0}} end={{x:1,y:0}}
                       style={{height:'100%',width:`${pct}%`,borderRadius:7}}/>
                   </View>
-                  <Text style={{color:`${C.yellow}AA`,fontSize:10,fontFamily:'monospace',marginTop:8}}>{pct}% complete — keep going! 🚀</Text>
+                  <Text style={{color:`${C.yellow}AA`,fontSize:10,fontFamily:'monospace',marginTop:8}}>{t('pct_complete',{pct})}</Text>
                 </LinearGradient>
               </View>
+
+              {/* Ball Skin Picker */}
+              <TouchableOpacity onPress={()=>setShowBallSkins(true)}
+                style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',
+                  backgroundColor:'rgba(0,212,255,0.08)',borderRadius:18,padding:16,
+                  borderWidth:2,borderColor:'rgba(0,212,255,0.25)'}}>
+                <View style={{flexDirection:'row',alignItems:'center',gap:10}}>
+                  <View style={{width:28,height:28,borderRadius:14,backgroundColor:
+                    selectedBallSkin==='gold'?'#FFD700':selectedBallSkin==='crystal'?'rgba(190,240,255,1)':
+                    selectedBallSkin==='neon_blue'?'#00D4FF':selectedBallSkin==='fire'?'#FF4500':
+                    selectedBallSkin==='rainbow'?'#FF69B4':'white',
+                    shadowColor:'#00D4FF',shadowRadius:8,shadowOpacity:0.6}}/>
+                  <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:13}}>{t('ball_skin')}</Text>
+                </View>
+                <Text style={{color:'rgba(255,255,255,0.4)',fontFamily:'monospace',fontSize:11}}>
+                  {selectedBallSkin.toUpperCase()} ›
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
+
+          <BallSkinPicker visible={showBallSkins} selected={selectedBallSkin}
+            onSelect={setSelectedBallSkin} onClose={()=>setShowBallSkins(false)}/>
 
           {/* ── ACHIEVEMENTS ── */}
           {tab==='achievements'&&(
@@ -242,9 +272,9 @@ export default function SettingsScreen(){
               {/* Count boxes */}
               <View style={{flexDirection:'row',gap:10,marginBottom:16}}>
                 {[
-                  {val:unlockedCount,    lbl:'UNLOCKED',c:C.mint},
-                  {val:earnableKeys.size,lbl:'READY →',  c:C.yellow},
-                  {val:totalCount-unlockedCount,lbl:'LOCKED',c:'rgba(255,255,255,0.25)'},
+                  {val:unlockedCount,    lbl:t('unlocked'),c:C.mint},
+                  {val:earnableKeys.size,lbl:t('ready')+' →',  c:C.yellow},
+                  {val:totalCount-unlockedCount,lbl:t('locked'),c:'rgba(255,255,255,0.25)'},
                 ].map(s=>(
                   <View key={s.lbl} style={{flex:1,backgroundColor:`${s.c}15`,borderRadius:16,padding:12,
                     alignItems:'center',borderWidth:2,borderColor:`${s.c}40`}}>
@@ -294,7 +324,7 @@ export default function SettingsScreen(){
                         <View style={{flexDirection:'row',alignItems:'center',gap:6,marginBottom:2}}>
                           <Text style={{color:isUnlocked?'#fff':isEarnable?C.yellow:'rgba(255,255,255,0.35)',
                             fontFamily:'monospace',fontWeight:'900',fontSize:13}}>
-                            {isLocked?'???':ach.name}
+                            {isLocked?t('locked_name'):ach.name}
                           </Text>
                           <View style={{width:6,height:6,borderRadius:3,backgroundColor:rarityColor,opacity:isLocked?0.2:1}}/>
                         </View>
@@ -308,8 +338,8 @@ export default function SettingsScreen(){
                               backgroundColor:`${C.yellow}15`,opacity:(payingAch&&!isPaying)?0.4:1}}>
                             {isPaying?<ActivityIndicator color={C.yellow} size="small"/>:(
                               <>
-                                <Text style={{color:C.yellow,fontSize:11,fontWeight:'900',fontFamily:'monospace'}}>🔓 UNLOCK</Text>
-                                <Text style={{color:C.yellow,fontSize:10,fontFamily:'monospace'}}>$0.50</Text>
+                                <Text style={{color:C.yellow,fontSize:11,fontWeight:'900',fontFamily:'monospace'}}>🔓 {t('unlock')}</Text>
+                                <Text style={{color:C.yellow,fontSize:10,fontFamily:'monospace'}}>{t('unlock_pay')}</Text>
                               </>
                             )}
                           </TouchableOpacity>
@@ -331,17 +361,17 @@ export default function SettingsScreen(){
             <View style={{paddingHorizontal:16,gap:10}}>
               <View style={{borderRadius:20,overflow:'hidden',borderWidth:2.5,borderColor:`${C.purple}50`,marginBottom:4}}>
                 <LinearGradient colors={[`${C.purple}18`,`${C.cyan}0C`]} style={{padding:18}}>
-                  <Text style={{color:'rgba(255,255,255,0.45)',fontSize:10,fontFamily:'monospace',letterSpacing:1,marginBottom:4}}>CONNECTED WALLET</Text>
+                  <Text style={{color:'rgba(255,255,255,0.45)',fontSize:10,fontFamily:'monospace',letterSpacing:1,marginBottom:4}}>{t('connected_wallet')}</Text>
                   <Text style={{color:'#fff',fontFamily:'monospace',fontSize:13,marginBottom:16}}>{user?.walletAddress||'—'}</Text>
                   {/* Disconnect */}
                   <TouchableOpacity onPress={()=>{
-                    Alert.alert('Disconnect?','You will need to reconnect to save progress.',[
-                      {text:'Cancel',style:'cancel'},
-                      {text:'Disconnect',style:'destructive',onPress:async()=>{await disconnect();router.replace('/login');}},
+                    Alert.alert(t('disconnect_title'),t('disconnect_msg'),[
+                      {text:t('cancel'),style:'cancel'},
+                      {text:t('disconnect'),style:'destructive',onPress:async()=>{await disconnect();router.replace('/login');}},
                     ]);
                   }} style={{borderRadius:14,borderWidth:2,borderColor:'rgba(255,56,96,0.5)',
                     paddingVertical:12,alignItems:'center',backgroundColor:'rgba(255,56,96,0.10)'}}>
-                    <Text style={{color:C.red,fontWeight:'900',fontFamily:'monospace',fontSize:12}}>DISCONNECT WALLET</Text>
+                    <Text style={{color:C.red,fontWeight:'900',fontFamily:'monospace',fontSize:12}}>{t('disconnect_wallet')}</Text>
                   </TouchableOpacity>
                 </LinearGradient>
               </View>
@@ -351,8 +381,8 @@ export default function SettingsScreen(){
                 backgroundColor:'rgba(255,255,255,0.08)',borderRadius:16,padding:16,
                 borderWidth:2,borderColor:'rgba(255,255,255,0.15)'}}>
                 <View>
-                  <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:14}}>🔊 Music & Sound</Text>
-                  <Text style={{color:'rgba(255,255,255,0.45)',fontSize:11,fontFamily:'monospace',marginTop:2}}>Toggle all game audio</Text>
+                  <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:14}}>🔊 {t('music_sound')}</Text>
+                  <Text style={{color:'rgba(255,255,255,0.45)',fontSize:11,fontFamily:'monospace',marginTop:2}}>{t('toggle_audio')}</Text>
                 </View>
                 <Switch value={!muted} onValueChange={v=>handleToggleMute(!v)}
                   thumbColor={muted?'#666':C.mint} trackColor={{false:'#333',true:`${C.mint}60`}}/>
@@ -360,9 +390,9 @@ export default function SettingsScreen(){
 
               {/* Links */}
               {[
-                {icon:ICON_COPPA, label:'Leaderboard',   onPress:()=>router.push('/rankings')},
-                {icon:ICON_BROWSE,label:'Community Maps', onPress:()=>router.push('/browse')},
-                {icon:ICON_STELLA,label:'Credits',        onPress:()=>router.push('/credits')},
+                {icon:ICON_COPPA, label:t('leaderboard'),   onPress:()=>router.push('/rankings')},
+                {icon:ICON_BROWSE,label:t('community_maps'), onPress:()=>router.push('/browse')},
+                {icon:ICON_STELLA,label:t('credits'),        onPress:()=>router.push('/credits')},
               ].map(l=>(
                 <TouchableOpacity key={l.label} onPress={l.onPress}
                   style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',
@@ -385,15 +415,146 @@ export default function SettingsScreen(){
             </View>
           )}
 
+          {/* ── TROPHIES ── */}
+          {tab==='trophies'&&(
+            <View style={{paddingHorizontal:16,gap:14}}>
+              {/* Total Score Banner */}
+              <View style={{borderRadius:20,overflow:'hidden',borderWidth:2.5,borderColor:`${C.yellow}50`}}>
+                <LinearGradient colors={[`${C.yellow}18`,'rgba(0,0,0,0.3)']} style={{padding:20,alignItems:'center'}}>
+                  <Text style={{color:'rgba(255,255,255,0.45)',fontFamily:'monospace',fontSize:10,letterSpacing:2}}>{t('total_score')}</Text>
+                  <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:32,marginTop:4}}>{(user?.totalScore||0).toLocaleString()}</Text>
+                </LinearGradient>
+              </View>
+
+              {/* Rank Title */}
+              {(()=>{
+                const w=duelRecord.wins;
+                const rank=w>=50?{title:'LEGEND',c:'#FFD700',e:'👑'}:w>=25?{title:'MASTER',c:'#FF4500',e:'🔥'}:w>=10?{title:'PRO',c:'#9945FF',e:'⚡'}:w>=3?{title:'CHALLENGER',c:'#3B82F6',e:''}:{title:'ROOKIE',c:'#6B7280',e:'🌱'};
+                return(
+                  <View style={{borderRadius:20,overflow:'hidden',borderWidth:2.5,borderColor:`${rank.c}50`}}>
+                    <LinearGradient colors={[`${rank.c}18`,'rgba(0,0,0,0.3)']} style={{padding:20,alignItems:'center'}}>
+                      {rank.e?<Text style={{fontSize:40}}>{rank.e}</Text>:null}
+                      <Text style={{color:rank.c,fontFamily:'monospace',fontWeight:'900',fontSize:22,marginTop:6,letterSpacing:3}}>{rank.title}</Text>
+                      <Text style={{color:'rgba(255,255,255,0.4)',fontFamily:'monospace',fontSize:10,marginTop:4}}>{t('duel_rank')}</Text>
+                    </LinearGradient>
+                  </View>
+                );
+              })()}
+
+              {/* Duel Record */}
+              <View style={{flexDirection:'row',gap:10}}>
+                {[{l:t('wins'),v:duelRecord.wins,c:C.mint},{l:t('losses'),v:duelRecord.losses,c:C.coral},{l:t('draws'),v:duelRecord.draws,c:C.cyan}].map(d=>(
+                  <View key={d.l} style={{flex:1,backgroundColor:'rgba(255,255,255,0.07)',borderRadius:14,padding:12,alignItems:'center',borderWidth:1.5,borderColor:`${d.c}30`}}>
+                    <Text style={{color:d.c,fontFamily:'monospace',fontWeight:'900',fontSize:20}}>{d.v}</Text>
+                    <Text style={{color:'rgba(255,255,255,0.4)',fontFamily:'monospace',fontSize:9,marginTop:2}}>{d.l}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Achievement Progress */}
+              <View style={{backgroundColor:'rgba(255,255,255,0.07)',borderRadius:18,padding:16,borderWidth:1.5,borderColor:'rgba(255,255,255,0.12)'}}>
+                <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                  <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:13}}>{t('achievement_progress')}</Text>
+                  <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:13}}>{pct}%</Text>
+                </View>
+                <View style={{height:12,backgroundColor:'rgba(255,255,255,0.08)',borderRadius:6,overflow:'hidden'}}>
+                  <LinearGradient colors={[C.yellow,C.orange]} style={{height:12,borderRadius:6,width:`${pct}%` as any}}/>
+                </View>
+                <Text style={{color:'rgba(255,255,255,0.35)',fontFamily:'monospace',fontSize:10,marginTop:6}}>{t('badges_unlocked',{count:unlockedCount,total:totalCount})}</Text>
+              </View>
+
+              {/* Milestone Badges Grid */}
+              <Text style={{color:'rgba(255,255,255,0.5)',fontFamily:'monospace',fontWeight:'900',fontSize:11,letterSpacing:1}}>{t('milestone_badges')}</Text>
+              <View style={{flexDirection:'row',flexWrap:'wrap',gap:10}}>
+                {[
+                  {key:'first_win',icon:'🏆',name:'First Win'},
+                  {key:'wins_25',icon:'⚡',name:'25 Wins'},
+                  {key:'wins_100',icon:'💎',name:'Century'},
+                  {key:'speed_run',icon:'🏃',name:'Speed Run'},
+                  {key:'first_publish',icon:'🌐',name:'Creator'},
+                  {key:'plays_100',icon:'🎮',name:'100 Games'},
+                  {key:'score_50k',icon:'💰',name:'50K Score'},
+                  {key:'total_1m',icon:'👑',name:'Millionaire'},
+                ].map(b=>{
+                  const unlocked=unlockedKeys.has(b.key);
+                  return(
+                    <View key={b.key} style={{width:(SW-52)/4,backgroundColor:unlocked?'rgba(255,215,0,0.1)':'rgba(255,255,255,0.05)',
+                      borderRadius:14,padding:10,alignItems:'center',borderWidth:1.5,
+                      borderColor:unlocked?'rgba(255,215,0,0.3)':'rgba(255,255,255,0.08)'}}>
+                      <Text style={{fontSize:24,opacity:unlocked?1:0.25}}>{b.icon}</Text>
+                      <Text style={{color:unlocked?'#fff':'rgba(255,255,255,0.25)',fontFamily:'monospace',fontWeight:'900',fontSize:8,marginTop:4,textAlign:'center'}}>{b.name}</Text>
+                      {!unlocked&&<Text style={{color:'rgba(255,255,255,0.15)',fontSize:10,marginTop:2}}>🔒</Text>}
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Next Milestones */}
+              <Text style={{color:'rgba(255,255,255,0.5)',fontFamily:'monospace',fontWeight:'900',fontSize:11,letterSpacing:1,marginTop:4}}>{t('next_goals')}</Text>
+              {(()=>{
+                const goals:{label:string,current:number,target:number,c:string}[]=[];
+                const lp=user?.levelsPlayed||0,lc=user?.levelsCompleted||0,ts=user?.totalScore||0;
+                const nextPlay=[10,25,50,100,250,500,1000].find(n=>lp<n);
+                if(nextPlay) goals.push({label:t('goal_play_n',{n:nextPlay}),current:lp,target:nextPlay,c:C.cyan});
+                const nextWin=[10,25,50,100,250].find(n=>lc<n);
+                if(nextWin) goals.push({label:t('goal_win_n',{n:nextWin}),current:lc,target:nextWin,c:C.mint});
+                const nextScore=[100000,500000,1000000].find(n=>ts<n);
+                if(nextScore) goals.push({label:t('goal_reach_score',{n:nextScore>=1000000?'1M':nextScore/1000+'K'}),current:ts,target:nextScore,c:C.yellow});
+                return goals.slice(0,3).map(g=>(
+                  <View key={g.label} style={{backgroundColor:'rgba(255,255,255,0.05)',borderRadius:14,padding:14,borderWidth:1,borderColor:'rgba(255,255,255,0.08)'}}>
+                    <View style={{flexDirection:'row',justifyContent:'space-between',marginBottom:6}}>
+                      <Text style={{color:'rgba(255,255,255,0.7)',fontFamily:'monospace',fontSize:11}}>{g.label}</Text>
+                      <Text style={{color:g.c,fontFamily:'monospace',fontWeight:'900',fontSize:11}}>{g.current}/{g.target}</Text>
+                    </View>
+                    <View style={{height:8,backgroundColor:'rgba(255,255,255,0.08)',borderRadius:4,overflow:'hidden'}}>
+                      <View style={{height:8,borderRadius:4,backgroundColor:g.c,width:`${Math.min(100,Math.round((g.current/g.target)*100))}%`}}/>
+                    </View>
+                  </View>
+                ));
+              })()}
+            </View>
+          )}
+
           {/* ── PRIVACY ── */}
           {tab==='privacy'&&(
             <View style={{paddingHorizontal:16}}>
+              {/* LANGUAGE SELECTOR */}
+              <View style={{borderRadius:20,overflow:'hidden',borderWidth:2.5,borderColor:`${C.cyan}40`,marginBottom:16}}>
+                <LinearGradient colors={[`${C.cyan}10`,`${C.purple}08`]} style={{padding:20}}>
+                  <Text style={{color:C.cyan,fontFamily:'monospace',fontWeight:'900',fontSize:14,marginBottom:12}}>🌐 LANGUAGE</Text>
+                  <View style={{flexDirection:'row',gap:6,flexWrap:'wrap'}}>
+                    {([
+                      {code:'en',flag:'🇬🇧',label:'EN'},{code:'fr',flag:'🇫🇷',label:'FR'},
+                      {code:'de',flag:'🇩🇪',label:'DE'},{code:'es',flag:'🇪🇸',label:'ES'},
+                      {code:'zh',flag:'🇨🇳',label:'ZH'},{code:'ja',flag:'🇯🇵',label:'JA'},
+                      {code:'ko',flag:'🇰🇷',label:'KO'},
+                    ] as const).map(l=>{
+                      const active=i18n.language?.startsWith(l.code);
+                      return(
+                        <TouchableOpacity key={l.code} onPress={()=>{
+                          i18n.changeLanguage(l.code);
+                          AsyncStorage.setItem('@lang',l.code).catch(()=>{});
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        }}
+                          style={{paddingHorizontal:10,paddingVertical:6,borderRadius:12,
+                            backgroundColor:active?'rgba(0,212,255,0.18)':'rgba(255,255,255,0.08)',
+                            borderWidth:active?2:1,borderColor:active?C.cyan:'rgba(255,255,255,0.15)',
+                            flexDirection:'row',alignItems:'center',gap:4}}>
+                          <Text style={{fontSize:18}}>{l.flag}</Text>
+                          <Text style={{color:active?C.cyan:'rgba(255,255,255,0.6)',fontSize:11,
+                            fontFamily:'monospace',fontWeight:active?'900':'600'}}>{l.label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </LinearGradient>
+              </View>
               <View style={{borderRadius:20,overflow:'hidden',borderWidth:2.5,borderColor:`${C.yellow}40`}}>
                 <LinearGradient colors={[`${C.yellow}10`,`${C.purple}08`]} style={{padding:20}}>
-                  <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:16,marginBottom:14}}>🔒 PRIVACY POLICY</Text>
+                  <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:16,marginBottom:14}}>🔒 {t('privacy_title')}</Text>
                   <ScrollView style={{maxHeight:420}} showsVerticalScrollIndicator={false}>
                     <Text style={{color:'rgba(255,255,255,0.75)',fontFamily:'monospace',fontSize:12,lineHeight:20}}>
-                      {`SeekerCraft respects your privacy.\n\nWHAT WE COLLECT\n• Wallet address (public key only — never private keys)\n• Game scores, achievements, levels you create\n• Play counts and ratings\n\nHOW WE USE IT\nYour wallet address is used as a unique identifier for the leaderboard and achievement system. We never sell your data to third parties.\n\nDATA STORAGE\nAll data is stored securely on Google Firebase (USA). Blockchain transactions are public by design and visible on Solana explorers.\n\nYOUR RIGHTS\nYou can disconnect your wallet at any time from the Wallet tab. This removes your local session.\n\nSECURITY\nWe never request, store or have access to your private keys or seed phrases. All Solana transactions are signed exclusively by your wallet app.\n\nCONTACT\nFor privacy questions, contact us via X (@SeekerCraftApp).\n\nLast updated: February 2026`}
+                      {t('privacy_body')}
                     </Text>
                   </ScrollView>
                 </LinearGradient>

@@ -12,12 +12,13 @@ import { ref, set } from 'firebase/database';
 import { logActivity, updateUserStats, database } from '@/utils/firebase';
 import { payPublishFee, getDeviceFingerprint, getSOLPriceUSD, PUBLISH_FEE_USD } from '@/utils/payments';
 import StickmanBuilder from '@/components/StickmanBuilder';
+import { useTranslation } from 'react-i18next';
 
 const ICON_BROWSE = require('../assets/images/Icons/Browse.png');
 
 const C = {
-  bg1: '#0B0033',
-  bg2: '#1A0066',
+  bg1: '#001A4D',
+  bg2: '#003080',
   gold: '#FFD700',
   orange: '#FF6B00',
   purple: '#7B2FBE',
@@ -51,6 +52,7 @@ interface Game {
 }
 
 export default function MyLevelsScreen() {
+  const {t}=useTranslation();
   const backPlayer      = useAudioPlayer(require('../assets/images/tools/back.mp3'));
   const startPlayer     = useAudioPlayer(require('../assets/images/tools/Start.mp3'));
   const mutedRef = useRef(false);
@@ -77,6 +79,8 @@ export default function MyLevelsScreen() {
   const [newName, setNewName] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [solPreview, setSolPreview] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
   useEffect(() => {
     getSOLPriceUSD().then(price => {
@@ -173,7 +177,7 @@ export default function MyLevelsScreen() {
   };
 
   const EMPTY_LEVEL = {
-    grid: Array(16).fill(null).map(() => Array(12).fill('empty')),
+    grid: Array(19).fill(null).map(() => Array(11).fill('empty')),
     balls: 10,
     name: '',
   };
@@ -251,10 +255,10 @@ export default function MyLevelsScreen() {
   };
 
   const deleteLevel = (levelId: string) => {
-    Alert.alert('Elimina livello?', 'Sei sicuro?', [
-      { text: 'Annulla', style: 'cancel' },
+    Alert.alert(t('delete_level_confirm'), t('delete_level_sure'), [
+      { text: t('cancel'), style: 'cancel' },
       {
-        text: 'Elimina',
+        text: t('delete_btn'),
         style: 'destructive',
         onPress: async () => {
           const updated = levels.filter(l => l.id !== levelId);
@@ -298,33 +302,33 @@ export default function MyLevelsScreen() {
 
   const publishGame = async () => {
     if (!game || !database) {
-      Alert.alert('Error', 'Cannot publish game at this time');
+      Alert.alert(t('error'), t('cannot_publish'));
       return;
     }
     if (!game.levels || game.levels.length === 0) {
-      Alert.alert('No Levels', 'Add at least one level before publishing!');
+      Alert.alert(t('no_levels_publish_title'), t('no_levels_publish_msg'));
       return;
     }
 
     const addr = await AsyncStorage.getItem('wallet_address');
-    if (!addr) { Alert.alert('Error', 'No wallet connected'); return; }
+    if (!addr) { Alert.alert(t('error'), t('no_wallet_error')); return; }
 
     const solPrice = await getSOLPriceUSD();
     const solAmount = (PUBLISH_FEE_USD / solPrice).toFixed(4);
 
     Alert.alert(
-      '🌐 Publish to Community',
-      `Cost: ~${solAmount} SOL ($${PUBLISH_FEE_USD.toFixed(2)})\n\nOnce published, players can donate!\n💰 You earn 90% of all donations.`,
+      t('publish_confirm_title'),
+      t('publish_confirm_msg', {sol: solAmount, usd: PUBLISH_FEE_USD.toFixed(2)}),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: `PAY ${solAmount} SOL`,
+          text: t('publish_pay', {sol: solAmount}),
           onPress: async () => {
             setPublishing(true);
             try {
               const payResult = await payPublishFee(addr);
               if (!payResult.success) {
-                Alert.alert('Payment Failed', payResult.error || 'Transaction rejected');
+                Alert.alert(t('payment_failed_title'), payResult.error || t('payment_failed_msg'));
                 return;
               }
 
@@ -366,12 +370,12 @@ export default function MyLevelsScreen() {
                 await AsyncStorage.setItem('my_games', JSON.stringify(games));
               }
 
-              Alert.alert('Published! 🎉', 'Your game is now live on SeekerCraft!', [{ text: 'OK' }]);
+              Alert.alert(t('publish_success_title'), t('publish_success_msg'), [{ text: t('ok') }]);
               await load();
               if (dname) logActivity(addr, dname, 'game_published', game.name).catch(() => {});
               try { (global as any).showAchievement?.('first_publish'); } catch {}
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to publish');
+              Alert.alert(t('error'), err.message || t('publish_error'));
             } finally {
               setPublishing(false);
             }
@@ -384,16 +388,16 @@ export default function MyLevelsScreen() {
   const updatePublishedGame = async () => {
     if (!game || !database) return;
     if (levels.length === 0) {
-      Alert.alert('No Levels', 'Add at least one level before updating!');
+      Alert.alert(t('no_levels_publish_title'), t('no_levels_publish_msg'));
       return;
     }
     Alert.alert(
-      'Update Published Game?',
-      `This will overwrite the current live version of "${gameName}" with your latest changes.`,
+      t('update_confirm_title'),
+      t('update_confirm_msg', {name: gameName}),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Update',
+          text: t('update'),
           onPress: async () => {
             setPublishing(true);
             try {
@@ -409,10 +413,10 @@ export default function MyLevelsScreen() {
               const fbId = game.firebaseId || game.id;
               await fbUpdate(ref(database, `games/public/${fbId}`), updates);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert('Updated!', 'Your game has been updated in the community! ✅');
+              Alert.alert(t('update_success_title'), t('update_success_msg'));
             } catch (error) {
               console.error('Update error:', error);
-              Alert.alert('Error', 'Failed to update game. Please try again.');
+              Alert.alert(t('error'), t('update_error'));
             } finally {
               setPublishing(false);
             }
@@ -424,12 +428,12 @@ export default function MyLevelsScreen() {
 
   const unpublishGame = async () => {
     Alert.alert(
-      'Unpublish Game?',
-      'This will remove your game from the community.',
+      t('unpublish_confirm_title'),
+      t('unpublish_confirm_msg'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Unpublish',
+          text: t('unpublish_confirm'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -438,10 +442,10 @@ export default function MyLevelsScreen() {
                 await set(ref(database, `games/public/${fbId}`), null);
                 await updateGamePublishedStatus(false);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                Alert.alert('Unpublished', 'Game removed from community');
+                Alert.alert(t('unpublish_success_title'), t('unpublish_success_msg'));
               }
             } catch {
-              Alert.alert('Error', 'Failed to unpublish game');
+              Alert.alert(t('error'), t('unpublish_error'));
             }
           },
         },
@@ -457,11 +461,9 @@ export default function MyLevelsScreen() {
     );
   }
 
-  const BG_IMAGE = require('../assets/images/sfondo.jpg');
   return (
     <View style={{ flex: 1 }}>
-      <ImageBackground source={BG_IMAGE} style={{position:'absolute',top:0,left:0,right:0,bottom:0}} resizeMode="cover"/>
-      <LinearGradient colors={['rgba(0,0,0,0.15)','rgba(11,0,51,0.75)','rgba(10,0,40,0.88)']} locations={[0,0.4,1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={['#001A4D','#003080','#9945FF']} locations={[0,0.5,1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <StickmanBuilder />
 
       <SafeAreaView style={{ flex: 1 }}>
@@ -473,12 +475,53 @@ export default function MyLevelsScreen() {
             <Text style={{ color: C.gold, fontSize: 14, fontWeight: 'bold', fontFamily: 'monospace' }}>← BACK</Text>
           </TouchableOpacity>
 
-          <View style={{ alignItems: 'center' }}>
-            <Text style={{ color: C.text, fontSize: 16, fontWeight: '900', fontFamily: 'monospace' }}>
-              {gameName || 'My Game'}
-            </Text>
-            {game?.published && (
-              <Text style={{ color: C.success, fontSize: 9, fontFamily: 'monospace', marginTop: 2 }}>● LIVE</Text>
+          <View style={{ alignItems: 'center', flex: 1, marginHorizontal: 8 }}>
+            {editingName ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <TextInput
+                  value={nameInput}
+                  onChangeText={setNameInput}
+                  maxLength={30}
+                  autoFocus
+                  style={{ color: C.text, fontSize: 14, fontWeight: '900', fontFamily: 'monospace',
+                    borderBottomWidth: 1.5, borderBottomColor: C.gold, paddingVertical: 2, minWidth: 120, textAlign: 'center' }}
+                />
+                <TouchableOpacity onPress={async () => {
+                  const trimmed = nameInput.trim();
+                  if (!trimmed) { setEditingName(false); return; }
+                  setGameName(trimmed);
+                  if (game) game.name = trimmed;
+                  // Update locally
+                  try {
+                    const raw = await AsyncStorage.getItem('my_games');
+                    if (raw) {
+                      const games = JSON.parse(raw);
+                      const g = games.find((g: any) => g.id === gameId);
+                      if (g) { g.name = trimmed; await AsyncStorage.setItem('my_games', JSON.stringify(games)); }
+                    }
+                  } catch {}
+                  // Update Firebase if published
+                  if (game?.published && game.firebaseId) {
+                    try {
+                      const { update: fbUpdate } = await import('firebase/database');
+                      await fbUpdate(ref(database, `games/public/${game.firebaseId}`), { name: trimmed });
+                    } catch {}
+                  }
+                  setEditingName(false);
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                }}>
+                  <Text style={{ color: C.gold, fontSize: 12, fontWeight: '900', fontFamily: 'monospace' }}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => { setNameInput(gameName); setEditingName(true); }}>
+                <Text style={{ color: C.text, fontSize: 16, fontWeight: '900', fontFamily: 'monospace' }}>
+                  {gameName || 'My Game'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {game?.published && !editingName && (
+              <Text style={{ color: C.success, fontSize: 9, fontFamily: 'monospace', marginTop: 2 }}>● {t('live_tap_edit')}</Text>
             )}
           </View>
 
@@ -488,7 +531,7 @@ export default function MyLevelsScreen() {
         <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 150 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Text style={{ color: C.textMuted, fontSize: 12, fontFamily: 'monospace' }}>
-              {levels.length} LEVELS
+              {t('levels_label', {count: levels.length})}
             </Text>
 
             {game?.published ? (
@@ -502,7 +545,7 @@ export default function MyLevelsScreen() {
                 }}
               >
                 <Text style={{ fontSize: 12 }}>✕</Text>
-                <Text style={{ color: C.red, fontSize: 11, fontWeight: 'bold', fontFamily: 'monospace' }}>UNPUBLISH</Text>
+                <Text style={{ color: C.red, fontSize: 11, fontWeight: 'bold', fontFamily: 'monospace' }}>{t('unpublish')}</Text>
               </TouchableOpacity>
             ) : (
               <View style={{
@@ -513,11 +556,11 @@ export default function MyLevelsScreen() {
                 <LinearGradient colors={['rgba(153,69,255,0.45)','rgba(20,241,149,0.18)']} style={{ position:'absolute',top:0,left:0,right:0,bottom:0 }}/>
                 <View style={{ flexDirection:'row', justifyContent:'center', alignItems:'center', gap:10, marginBottom:8 }}>
                   <Text style={{ color: '#FFF', fontFamily: 'monospace', fontSize: 13, fontWeight: '900', letterSpacing:1 }}>
-                    🌐 PUBLISH TO COMMUNITY
+                    🌐 {t('publish_to_community')}
                   </Text>
                 </View>
                 <Text style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'monospace', fontSize: 10, textAlign: 'center', marginBottom: 14 }}>
-                  Once published, players can donate!{'\n'}You earn 90% of all donations.
+                  {t('publish_donate_info')}
                 </Text>
                 <TouchableOpacity
                   onPress={() => { playStart(); publishGame(); }}
@@ -530,7 +573,7 @@ export default function MyLevelsScreen() {
                     style={{ alignItems:'center', justifyContent:'center', flexDirection:'row', gap:10, paddingVertical:14 }}
                   >
                     <Text style={{ color: levels.length === 0 ? C.textMuted : '#FFF', fontSize: 13, fontWeight: '900', fontFamily: 'monospace' }}>
-                      {publishing ? 'PUBLISHING...' : `PUBLISH · ~${solPreview || '?'} SOL`}
+                      {publishing ? t('publishing') : t('publish_cost', {sol: solPreview || '?'})}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -543,18 +586,18 @@ export default function MyLevelsScreen() {
               backgroundColor: C.card, borderRadius: 12, padding: 16, marginBottom: 10,
               borderWidth: 1, borderColor: C.cardBorder,
             }}>
-              <Text style={{ color: C.orange, fontSize: 10, fontFamily: 'monospace' }}>LEVEL {index + 1}</Text>
+              <Text style={{ color: C.orange, fontSize: 10, fontFamily: 'monospace' }}>{t('level_n', {n: index + 1})}</Text>
               <Text style={{ color: C.text, fontSize: 16, fontWeight: '800', fontFamily: 'monospace', marginTop: 2 }}>
                 {level.name}
               </Text>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <TouchableOpacity onPress={() => { playBack(); openLevel(level); }}
                   style={{ flex: 1, backgroundColor: C.purple, paddingVertical: 10, borderRadius: 8, alignItems: 'center' }}>
-                  <Text style={{ color: '#FFF', fontWeight: 'bold', fontFamily: 'monospace', fontSize: 12 }}>EDIT</Text>
+                  <Text style={{ color: '#FFF', fontWeight: 'bold', fontFamily: 'monospace', fontSize: 12 }}>{t('edit')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => { playStart(); playLevel(level); }}
                   style={{ flex: 1, backgroundColor: C.gold, paddingVertical: 10, borderRadius: 8, alignItems: 'center' }}>
-                  <Text style={{ color: '#000', fontWeight: 'bold', fontFamily: 'monospace', fontSize: 12 }}>▶ PLAY</Text>
+                  <Text style={{ color: '#000', fontWeight: 'bold', fontFamily: 'monospace', fontSize: 12 }}>▶ {t('play')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => deleteLevel(level.id)} disabled={game?.published}
                   style={{
@@ -572,12 +615,30 @@ export default function MyLevelsScreen() {
           {levels.length === 0 && (
             <View style={{ alignItems: 'center', padding: 40 }}>
               <Text style={{ fontSize: 64, marginBottom: 16 }}>🎯</Text>
-              <Text style={{ color: C.text, fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace' }}>NO LEVELS YET</Text>
+              <Text style={{ color: C.text, fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace' }}>{t('no_levels_yet')}</Text>
               <Text style={{ color: C.textMuted, fontSize: 12, fontFamily: 'monospace', marginTop: 6, textAlign: 'center' }}>
-                Tap + below to create your first level!
+                {t('no_levels_hint')}
               </Text>
             </View>
           )}
+
+          {/* Help section */}
+          <View style={{ marginTop: 20, borderRadius: 16, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.12)' }}>
+            <Image source={require('../assets/images/help.png')}
+              style={{ width: '100%', height: 200, resizeMode: 'contain', backgroundColor: 'rgba(0,0,0,0.3)' }} />
+            <View style={{ padding: 14, backgroundColor: 'rgba(30,10,60,0.7)' }}>
+              <Text style={{ color: C.gold, fontSize: 12, fontWeight: '900', fontFamily: 'monospace', marginBottom: 4 }}>
+                HOW TO CREATE LEVELS
+              </Text>
+              <Text style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace', lineHeight: 16 }}>
+                1. Tap + to create a new level{'\n'}
+                2. Select a tool and tap cells to place pegs{'\n'}
+                3. Add at least 1 SKR (gold) peg{'\n'}
+                4. Test your level with PLAY TEST{'\n'}
+                5. Publish to share with the community
+              </Text>
+            </View>
+          </View>
         </ScrollView>
 
         {/* UPDATE BANNER — visible when published */}
@@ -595,7 +656,7 @@ export default function MyLevelsScreen() {
                 <Image source={require('../assets/images/Icons/save.png')}
                   style={{ width: 22, height: 22, resizeMode: 'contain', tintColor: '#FFF' }} />
                 <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '900', fontFamily: 'monospace', letterSpacing: 1 }}>
-                  {publishing ? 'UPDATING...' : 'UPDATE PUBLISHED GAME'}
+                  {publishing ? t('updating') : t('update_published')}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

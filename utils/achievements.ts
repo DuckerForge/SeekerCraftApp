@@ -71,6 +71,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   { key:'play_1_minute',     name:'Speedster',            description:'Play and complete a level in under 60 seconds',          icon:'⏱️', rarity:'common',    category:'player',   points:500  },
   { key:'lost_5_games',      name:'It Happens',           description:'Lose 5 games — no shame, keep trying!',                  icon:'😭', rarity:'common',    category:'player',   points:500  },
   { key:'lost_25_games',     name:'Resilient',            description:'Lose 25 games and keep playing',                         icon:'💪', rarity:'rare',      category:'player',   points:1000 },
+  // PLAYER: daily check-in
+  { key:'daily_streak_7',   name:'Week Warrior',         description:'Check in 7 days in a row',                                icon:'🔥', rarity:'rare',      category:'player',   points:1000 },
+  { key:'daily_streak_30',  name:'Dedicated',            description:'Check in 30 days in a row',                               icon:'👑', rarity:'legendary', category:'player',   points:5000 },
   // PLAYER: bucket
   { key:'free_ball',         name:'Bucket Catch',         description:'Catch the ball in the moving bucket',                    icon:'🪣', rarity:'common',    category:'player',   points:500  },
   { key:'bucket_10',         name:'Bucket Hoarder',       description:'Catch the ball in the bucket 10 times total',            icon:'🪣', rarity:'rare',      category:'player',   points:1000 },

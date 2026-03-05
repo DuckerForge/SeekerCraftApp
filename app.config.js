@@ -4,16 +4,16 @@ module.exports = {
   expo: {
     name: "SeekerCraft",
     slug: "seekercraft",
-    version: "1.0.3",
+    version: "1.0.5",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./assets/images/log.png",
     scheme: "seekercraft",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.duckerforge.seekercraft",
-      buildNumber: "4",
+      buildNumber: "6",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -26,7 +26,7 @@ module.exports = {
         backgroundColor: "#1a1a2e",
       },
       package: "com.duckerforge.seekercraft",
-      versionCode: 4,
+      versionCode: 6,
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },
@@ -50,6 +50,7 @@ module.exports = {
       ],
       "expo-audio",
       "expo-asset",
+      "expo-localization",
     ],
     experiments: {
       typedRoutes: true,
