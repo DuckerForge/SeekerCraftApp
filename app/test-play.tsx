@@ -1873,37 +1873,67 @@ export default function TestPlayScreen() {
       <View style={st.overlay}>
         <LinearGradient colors={victory?['rgba(255,215,0,0.15)','rgba(20,241,149,0.08)','rgba(4,0,18,0.95)']:['rgba(239,68,68,0.12)','rgba(4,0,18,0.95)']} style={StyleSheet.absoluteFill}/>
         <View style={{alignItems:'center',paddingHorizontal:30}}>
-          {victory?<Image source={require('../assets/images/Icons/coppa.png')} style={{width:100,height:100,marginBottom:16}}/>:<Image source={require('../assets/images/Icons/play.png')} style={{width:90,height:90,marginBottom:16,opacity:0.85}}/>}
-          <Text style={{color:victory?C.gold:'#EF4444',fontSize:28,fontWeight:'900',fontFamily:'monospace',textAlign:'center',textShadowColor:victory?C.gold:'#EF4444',textShadowRadius:20}}>
-            {victory?t('all_skr_cleared'):t('game_over')}
-          </Text>
-          {!isPlaytest&&<View style={{marginTop:12,backgroundColor:'rgba(255,255,255,0.06)',borderRadius:12,paddingHorizontal:24,paddingVertical:10,borderWidth:1,borderColor:'rgba(255,255,255,0.1)'}}>
-            <Text style={{color:C.gold,fontSize:22,fontWeight:'900',fontFamily:'monospace',textAlign:'center'}}>{score.toLocaleString()} {t('pts')}</Text>
-          </View>}
-          <View style={{flexDirection:'row',gap:12,marginTop:20,width:'100%'}}>
-            {!victory&&<TouchableOpacity style={{flex:1,backgroundColor:'rgba(255,255,255,0.08)',paddingVertical:14,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:'rgba(255,255,255,0.15)'}} onPress={()=>router.back()}>
-              <Text style={{color:'#FFF',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>{t('exit')}</Text>
-            </TouchableOpacity>}
-            {victory&&isCommunityGame?(
-              <TouchableOpacity style={{flex:1,borderRadius:12,overflow:'hidden'}} onPress={async()=>{await AsyncStorage.setItem('level_result',JSON.stringify({victory:true,score}));router.back();}}>
-                <LinearGradient colors={['#14F195','#0EA5E9']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
-                  <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>▶  {t('next_level_btn')}</Text>
+          {/* AI MODE: match result screen */}
+          {aiMode?(
+            <>
+              <Image source={require('../assets/images/Icons/coppa.png')} style={{width:80,height:80,marginBottom:12,opacity:playerScore>=aiScore?1:0.35}}/>
+              <Text style={{color:playerScore>=aiScore?C.gold:'#EF4444',fontSize:26,fontWeight:'900',fontFamily:'monospace',textAlign:'center',textShadowColor:playerScore>=aiScore?C.gold:'#EF4444',textShadowRadius:20}}>
+                {playerScore>=aiScore?t('you_win'):t('ai_wins')}
+              </Text>
+              <View style={{flexDirection:'row',gap:16,marginTop:16,marginBottom:20}}>
+                <View style={{alignItems:'center',backgroundColor:'rgba(0,212,255,0.12)',borderRadius:12,padding:14,borderWidth:1.5,borderColor:'rgba(0,212,255,0.4)',minWidth:100}}>
+                  <Text style={{color:'rgba(255,255,255,0.5)',fontSize:9,fontFamily:'monospace',marginBottom:4}}>YOU</Text>
+                  <Text style={{color:'#00D4FF',fontSize:22,fontWeight:'900',fontFamily:'monospace'}}>{playerScore.toLocaleString()}</Text>
+                </View>
+                <View style={{alignItems:'center',justifyContent:'center'}}>
+                  <Text style={{color:'rgba(255,255,255,0.4)',fontSize:14,fontWeight:'900',fontFamily:'monospace'}}>VS</Text>
+                </View>
+                <View style={{alignItems:'center',backgroundColor:'rgba(255,69,0,0.12)',borderRadius:12,padding:14,borderWidth:1.5,borderColor:'rgba(255,69,0,0.4)',minWidth:100}}>
+                  <Text style={{color:'rgba(255,255,255,0.5)',fontSize:9,fontFamily:'monospace',marginBottom:4}}>AI</Text>
+                  <Text style={{color:'#FF4500',fontSize:22,fontWeight:'900',fontFamily:'monospace'}}>{aiScore.toLocaleString()}</Text>
+                </View>
+              </View>
+              <TouchableOpacity style={{width:'100%',borderRadius:12,overflow:'hidden'}} onPress={()=>router.back()}>
+                <LinearGradient colors={playerScore>=aiScore?['#FFD700','#FF9500']:['#6B7280','#4B5563']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
+                  <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:15}}>{t('exit')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            ):victory?(
-              <TouchableOpacity style={{flex:1,borderRadius:12,overflow:'hidden'}} onPress={()=>{victoryRef.current=false;allSkrHitRef.current=false;setVictory(false);setGameOver(false);loadLevel();ballsRef.current=initialBalls;setBalls(initialBalls);}}>
-                <LinearGradient colors={['#FFD700','#FF9500']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
-                  <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>{t('play_again')}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ):(
-              <TouchableOpacity style={{flex:1,borderRadius:12,overflow:'hidden'}} onPress={()=>{victoryRef.current=false;allSkrHitRef.current=false;setVictory(false);setGameOver(false);loadLevel();ballsRef.current=initialBalls;setBalls(initialBalls);}}>
-                <LinearGradient colors={['#FF6B00','#FF3D00']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
-                  <Text style={{color:'#FFF',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>{t('retry')}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            )}
-          </View>
+            </>
+          ):(
+            <>
+              {victory?<Image source={require('../assets/images/Icons/coppa.png')} style={{width:100,height:100,marginBottom:16}}/>:<Image source={require('../assets/images/Icons/play.png')} style={{width:90,height:90,marginBottom:16,opacity:0.85}}/>}
+              <Text style={{color:victory?C.gold:'#EF4444',fontSize:28,fontWeight:'900',fontFamily:'monospace',textAlign:'center',textShadowColor:victory?C.gold:'#EF4444',textShadowRadius:20}}>
+                {victory?t('all_skr_cleared'):t('game_over')}
+              </Text>
+              {!isPlaytest&&<View style={{marginTop:12,backgroundColor:'rgba(255,255,255,0.06)',borderRadius:12,paddingHorizontal:24,paddingVertical:10,borderWidth:1,borderColor:'rgba(255,255,255,0.1)'}}>
+                <Text style={{color:C.gold,fontSize:22,fontWeight:'900',fontFamily:'monospace',textAlign:'center'}}>{score.toLocaleString()} {t('pts')}</Text>
+              </View>}
+              <View style={{flexDirection:'row',gap:12,marginTop:20,width:'100%'}}>
+                {!victory&&<TouchableOpacity style={{flex:1,backgroundColor:'rgba(255,255,255,0.08)',paddingVertical:14,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:'rgba(255,255,255,0.15)'}} onPress={()=>router.back()}>
+                  <Text style={{color:'#FFF',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>{t('exit')}</Text>
+                </TouchableOpacity>}
+                {victory&&isCommunityGame?(
+                  <TouchableOpacity style={{flex:1,borderRadius:12,overflow:'hidden'}} onPress={async()=>{await AsyncStorage.setItem('level_result',JSON.stringify({victory:true,score}));router.back();}}>
+                    <LinearGradient colors={['#14F195','#0EA5E9']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
+                      <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>▶  {t('next_level_btn')}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ):victory?(
+                  <TouchableOpacity style={{flex:1,borderRadius:12,overflow:'hidden'}} onPress={()=>{victoryRef.current=false;allSkrHitRef.current=false;setVictory(false);setGameOver(false);loadLevel();ballsRef.current=initialBalls;setBalls(initialBalls);}}>
+                    <LinearGradient colors={['#FFD700','#FF9500']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
+                      <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>{t('play_again')}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ):(
+                  <TouchableOpacity style={{flex:1,borderRadius:12,overflow:'hidden'}} onPress={()=>{victoryRef.current=false;allSkrHitRef.current=false;setVictory(false);setGameOver(false);loadLevel();ballsRef.current=initialBalls;setBalls(initialBalls);}}>
+                    <LinearGradient colors={['#FF6B00','#FF3D00']} style={{paddingVertical:14,alignItems:'center',borderRadius:12}}>
+                      <Text style={{color:'#FFF',fontWeight:'900',fontFamily:'monospace',fontSize:14}}>{t('retry')}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
         </View>
       </View>
     )}

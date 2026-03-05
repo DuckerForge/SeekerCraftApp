@@ -25,6 +25,8 @@
   "badges_btn": "뱃지",
   "pvp": "PVP",
   "vs_ai": "AI 대전",
+  "you_win": "당신이 이겼습니다!",
+  "ai_wins": "AI 승리",
   "profile": "프로필",
   "stat_pts": "점수",
   "stat_wins": "승리",
