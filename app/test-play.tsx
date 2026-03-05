@@ -1910,7 +1910,7 @@ export default function TestPlayScreen() {
               </View>
               <TouchableOpacity style={{width:'100%',borderRadius:16,overflow:'hidden',marginTop:4,shadowColor:playerScore>=aiScore?'#FFD700':'#9945FF',shadowOffset:{width:0,height:4},shadowOpacity:0.5,shadowRadius:12,elevation:8}} onPress={()=>router.back()}>
                 <LinearGradient colors={playerScore>=aiScore?['#FFD700','#FF9500','#FF6B00']:['#9945FF','#6A1FC2']} start={{x:0,y:0}} end={{x:1,y:0}} style={{paddingVertical:16,alignItems:'center',borderRadius:16,flexDirection:'row',justifyContent:'center',gap:8}}>
-                  <Text style={{color:playerScore>=aiScore?'#000':'#FFF',fontWeight:'900',fontFamily:'monospace',fontSize:16,letterSpacing:1}}>{playerScore>=aiScore?'🏆  '+t('exit'):'  '+t('exit')}</Text>
+                  <Text style={{color:playerScore>=aiScore?'#000':'#FFF',fontWeight:'900',fontFamily:'monospace',fontSize:16,letterSpacing:1}}>{t('exit')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </>
