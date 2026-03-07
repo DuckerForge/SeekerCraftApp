@@ -374,7 +374,7 @@
   "failed": "실패",
   "achievement_unlocked_label": "업적 달성",
   "new_achievement": "새 업적",
-  "unlock_pay": "$0.50 해제",
+  "unlock_pay": "0.25 SKR 해제",
   "day_n": "{{n}}일차",
   "daily_checkin": "일일 출석 연속 기록",
   "day_milestone": "{{n}}일차: +{{pts}}",

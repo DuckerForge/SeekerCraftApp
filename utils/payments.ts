@@ -1,7 +1,7 @@
 // utils/payments.ts - SeekerCraft payment system v3
 // ALL payments are SOL-only (same pattern as SKR Burner app).
-// Publish $1.00 (90% dev, 10% pool) | Achievement $0.50 (50% dev, 50% pool)
-// Donation: variable (70% creator, 20% dev, 10% pool)
+// Publish ~$0.25 in SKR (dev wallet) | Achievement 0.25 SKR (50% dev, 50% pool)
+// Donation: variable (90% creator, 10% dev)
 import { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import { transact, Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js'
@@ -30,8 +30,8 @@ export const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${heliusKey
 export const CLUSTER      = 'mainnet-beta' as const
 
 // ─── PRICES ──────────────────────────────────────────────────────────────────
-export const PUBLISH_FEE_USD     = 0.25  // $0.25 USD converted to SOL at current price
-export const ACHIEVEMENT_FEE_USD = 0.50
+export const PUBLISH_FEE_USD     = 0.25  // $0.25 USD converted to SKR at current price
+export const ACHIEVEMENT_FEE_SKR = 0.25  // fixed 0.25 SKR tokens
 
 // ─── TOKEN PRICES ────────────────────────────────────────────────────────────
 let _skrPriceCache: { price: number; at: number } | null = null
@@ -223,16 +223,49 @@ export const payPublishFee = async (userWallet: string): Promise<PaymentResult> 
   }
 }
 
-// ─── ACHIEVEMENT FEE ($0.50 → 50% dev, 50% pool) ──────────────────────────
+// ─── ACHIEVEMENT FEE (0.25 SKR fixed, 50% dev, 50% pool) ────────────────────
 export const payAchievementFee = async (userWallet: string): Promise<PaymentResult> => {
+  let txSig = ''
   try {
-    const { txSig, solPaid } = await doSOLPayment(ACHIEVEMENT_FEE_USD, [
-      { wallet: DEV_WALLET,  percent: 0.50 },
-      { wallet: POOL_WALLET, percent: 0.50 },
-    ])
-    return { success: true, txSignature: txSig, usdAmount: ACHIEVEMENT_FEE_USD, solAmount: solPaid }
+    const skrLamports = Math.floor(ACHIEVEMENT_FEE_SKR * (10 ** SKR_DECIMALS))
+    const connection = new Connection(HELIUS_RPC, 'confirmed')
+
+    await transact(async (wallet: Web3MobileWallet) => {
+      const auth = await wallet.authorize({ cluster: CLUSTER, identity: { name: 'SeekerCraft', uri: 'https://seekercraft.xyz' } })
+      const addrBytes = Buffer.from(auth.accounts[0].address, 'base64')
+      const owner = new PublicKey(bs58.encode(addrBytes))
+
+      const senderATA = await getAssociatedTokenAddress(SKR_MINT, owner)
+      try {
+        const acct = await getAccount(connection, senderATA)
+        if (Number(acct.amount) < skrLamports)
+          throw new Error(`Insufficient SKR. Need ${ACHIEVEMENT_FEE_SKR} SKR, have ${(Number(acct.amount) / (10 ** SKR_DECIMALS)).toFixed(2)} SKR`)
+      } catch (e: any) {
+        if (e.message?.includes('Insufficient')) throw e
+        throw new Error('No SKR token account. Buy SKR first.')
+      }
+
+      const devAmount  = Math.floor(skrLamports * 0.50)
+      const poolAmount = skrLamports - devAmount
+
+      const devATA  = await getAssociatedTokenAddress(SKR_MINT, DEV_WALLET)
+      const poolATA = await getAssociatedTokenAddress(SKR_MINT, POOL_WALLET)
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
+      const tx = new Transaction({ feePayer: owner, blockhash, lastValidBlockHeight })
+      tx.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 50000 }))
+      try { await getAccount(connection, devATA)  } catch { tx.add(createAssociatedTokenAccountInstruction(owner, devATA,  DEV_WALLET,  SKR_MINT)) }
+      try { await getAccount(connection, poolATA) } catch { tx.add(createAssociatedTokenAccountInstruction(owner, poolATA, POOL_WALLET, SKR_MINT)) }
+      tx.add(createTransferInstruction(senderATA, devATA,  owner, devAmount))
+      tx.add(createTransferInstruction(senderATA, poolATA, owner, poolAmount))
+
+      const [signed] = await wallet.signTransactions({ transactions: [tx] })
+      txSig = await connection.sendRawTransaction((signed as Transaction).serialize(), { skipPreflight: false })
+      await connection.confirmTransaction({ signature: txSig, blockhash, lastValidBlockHeight }, 'confirmed')
+    })
+
+    return { success: true, txSignature: txSig, skrAmount: ACHIEVEMENT_FEE_SKR }
   } catch (err: any) {
-    return { success: false, error: err.message || 'Payment failed' }
+    return { success: false, error: err.message || 'SKR payment failed' }
   }
 }
 

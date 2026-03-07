@@ -374,7 +374,7 @@
   "failed": "失敗",
   "achievement_unlocked_label": "アチーブメント解除",
   "new_achievement": "新しいアチーブメント",
-  "unlock_pay": "$0.50 で解除",
+  "unlock_pay": "0.25 SKR 解除",
   "day_n": "{{n}}日目",
   "daily_checkin": "デイリーチェックインストリーク",
   "day_milestone": "{{n}}日目: +{{pts}}",

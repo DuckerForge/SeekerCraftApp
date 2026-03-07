@@ -374,7 +374,7 @@
   "failed": "Échoué",
   "achievement_unlocked_label": "SUCCÈS DÉBLOQUÉ",
   "new_achievement": "NOUVEAU SUCCÈS",
-  "unlock_pay": "DÉBLOQUER 0,50 $",
+  "unlock_pay": "0.25 SKR DÉBLOQUER",
   "day_n": "JOUR {{n}}",
   "daily_checkin": "SÉRIE DE CONNEXION QUOTIDIENNE",
   "day_milestone": "JOUR {{n}} : +{{pts}}",

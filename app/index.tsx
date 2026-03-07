@@ -177,6 +177,7 @@ export default function HomeScreen(){
   const [challengeCount,setChallengeCount]=useState(0);
   const [showMyGames,setShowMyGames]=useState(false);
   const [myGamesList,setMyGamesList]=useState<any[]>([]);
+  const joinedLoggedRef=useRef(false);
 
   // Sound effects only — main music is managed by GlobalMusicPlayer in app-providers
   let startPlayer:any=null, backPlayer:any=null, swordPlayer:any=null;
@@ -466,7 +467,7 @@ export default function HomeScreen(){
                 ))}
                 <TouchableOpacity onPress={async()=>{
                   setShowWelcome(false);
-                  if(user?.walletAddress){await markOnboardingDone(user.walletAddress);logActivity(user.walletAddress,user.displayName||'Player','joined').catch(()=>{});}
+                  if(user?.walletAddress){await markOnboardingDone(user.walletAddress);if(!joinedLoggedRef.current){joinedLoggedRef.current=true;logActivity(user.walletAddress,user.displayName||'Player','joined').catch(()=>{});}}
                 }} style={{borderRadius:18,overflow:'hidden',marginTop:14}}>
                   <LinearGradient colors={[C.yellow,C.orange]} start={{x:0,y:0}} end={{x:1,y:0}} style={{paddingVertical:17,alignItems:'center'}}>
                     <Text style={{color:'#000',fontWeight:'900',fontFamily:'monospace',fontSize:17,letterSpacing:2}}>LET'S GO! 🚀</Text>

@@ -374,7 +374,7 @@
   "failed": "Fehlgeschlagen",
   "achievement_unlocked_label": "ERRUNGENSCHAFT FREIGESCHALTET",
   "new_achievement": "NEUE ERRUNGENSCHAFT",
-  "unlock_pay": "0,50$ FREISCHALTEN",
+  "unlock_pay": "0.25 SKR FREISCHALTEN",
   "day_n": "TAG {{n}}",
   "daily_checkin": "TÄGLICHE CHECK-IN-SERIE",
   "day_milestone": "TAG {{n}}: +{{pts}}",

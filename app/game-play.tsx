@@ -200,7 +200,6 @@ export default function GamePlayScreen() {
         if (g.levels && g.levels.length > 0) {
           // Carica il primo livello
           await loadLevel(g.levels[0]);
-          playLevelMusic(0);
         }
       } else {
         router.back();
@@ -261,7 +260,6 @@ export default function GamePlayScreen() {
     if (nextIndex < game.levels.length) {
       setCurrentLevelIndex(nextIndex);
       await loadLevel(game.levels[nextIndex]);
-      playLevelMusic(nextIndex); // alternate music per level
       setShowLevelComplete(false);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       // Log singola vittoria livello nel feed

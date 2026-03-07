@@ -374,7 +374,7 @@
   "failed": "Failed",
   "achievement_unlocked_label": "ACHIEVEMENT UNLOCKED",
   "new_achievement": "NEW ACHIEVEMENT",
-  "unlock_pay": "$0.50 UNLOCK",
+  "unlock_pay": "0.25 SKR UNLOCK",
   "day_n": "DAY {{n}}",
   "daily_checkin": "DAILY CHECK-IN STREAK",
   "day_milestone": "DAY {{n}}: +{{pts}}",

@@ -374,7 +374,7 @@
   "failed": "失败",
   "achievement_unlocked_label": "成就已解锁",
   "new_achievement": "新成就",
-  "unlock_pay": "$0.50 解锁",
+  "unlock_pay": "0.25 SKR 解锁",
   "day_n": "第 {{n}} 天",
   "daily_checkin": "每日签到连续奖励",
   "day_milestone": "第 {{n}} 天：+{{pts}}",

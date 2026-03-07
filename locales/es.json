@@ -374,7 +374,7 @@
   "failed": "Fallido",
   "achievement_unlocked_label": "LOGRO DESBLOQUEADO",
   "new_achievement": "NUEVO LOGRO",
-  "unlock_pay": "$0.50 DESBLOQUEAR",
+  "unlock_pay": "0.25 SKR DESBLOQUEAR",
   "day_n": "DÍA {{n}}",
   "daily_checkin": "RACHA DE CHECK-IN DIARIO",
   "day_milestone": "DÍA {{n}}: +{{pts}}",

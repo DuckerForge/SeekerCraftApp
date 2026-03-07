@@ -25,7 +25,7 @@ export const database = getDatabase(app);
 //   access_key_usd: number          (default 1.0)
 //   access_key_duration_ms: number  (default 60000 = 1 min for test)
 //   publish_fee_usd: number         (default 0.25)
-//   achievement_fee_usd: number     (default 0.50)
+//   achievement_fee_skr: number     (default 0.25)
 //   dev_percent: number             (default 60)
 //
 // /users/{walletAddress}/
@@ -58,7 +58,7 @@ export const initDefaultConfig = async () => {
       access_key_usd: 1.0,
       access_key_duration_ms: 60000,   // 1 min for testing
       publish_fee_usd: 0.25,
-      achievement_fee_usd: 0.50,
+      achievement_fee_skr: 0.25,
       dev_percent: 60,
     });
   }

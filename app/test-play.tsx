@@ -238,6 +238,9 @@ export default function TestPlayScreen() {
   const aiLevelsPackRef = useRef<any[]>([]);
   const aiLevelIndexRef = useRef(0);
   const [aiLevelLabel, setAiLevelLabel] = useState<string|null>(null);
+  const [skrCountdown, setSkrCountdown] = useState<number|null>(null);
+  const skrCountdownRef = useRef<ReturnType<typeof setInterval>|null>(null);
+  const skrCountdownWaitRef = useRef<ReturnType<typeof setTimeout>|null>(null);
 
   const [missShow, setMissShow] = useState(false);
   const [missX, setMissX] = useState(SW/2);
@@ -431,7 +434,14 @@ export default function TestPlayScreen() {
     return blocks;
   };
 
+  const clearSkrCountdown=()=>{
+    if(skrCountdownWaitRef.current){clearTimeout(skrCountdownWaitRef.current);skrCountdownWaitRef.current=null;}
+    if(skrCountdownRef.current){clearInterval(skrCountdownRef.current);skrCountdownRef.current=null;}
+    setSkrCountdown(null);
+  };
+
   const loadLevel=async()=>{
+    clearSkrCountdown();
     try {
       victoryRef.current=false; allSkrHitRef.current=false; allSkrTouchedSV.value=false;
       const savedSkin=await AsyncStorage.getItem('ball_skin_selected'); if(savedSkin) setBallSkin(savedSkin);
@@ -749,6 +759,23 @@ export default function TestPlayScreen() {
           });
         },16);
         setTimeout(()=>{clearInterval(confInterval);setConfetti([]);},4000);
+        // Countdown: wait 5s, then 10→0 countdown, then force victory
+        skrCountdownWaitRef.current=setTimeout(()=>{
+          let n=10; setSkrCountdown(n);
+          skrCountdownRef.current=setInterval(()=>{
+            n--;
+            if(n<=0){
+              clearInterval(skrCountdownRef.current!); skrCountdownRef.current=null;
+              setSkrCountdown(null);
+              if(!victoryRef.current){
+                victoryRef.current=true; setLastSkrHitUI(false); setVictory(true); stopFeverMusic();
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                saveReplayIfChallenge(); saveAmazingReplay();
+                if(aiModeRef.current) logAIResult();
+              }
+            } else { setSkrCountdown(n); }
+          },1000);
+        },5000);
       }
     }
   };
@@ -919,6 +946,7 @@ export default function TestPlayScreen() {
           },1500);
           return;
         }
+        clearSkrCountdown();
         victoryRef.current=true; setLastSkrHitUI(false); setVictory(true); stopFeverMusic();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         saveReplayIfChallenge(); saveAmazingReplay();
@@ -1010,8 +1038,18 @@ export default function TestPlayScreen() {
     if (idx >= pack.length) return; // safety
     const data = pack[idx];
     // Reset game state but keep scores
+    clearSkrCountdown();
     victoryRef.current = false; allSkrHitRef.current = false; allSkrTouchedSV.value = false;
     setVictory(false); setGameOver(false); setLastSkrHitUI(false);
+    // Change music track for new VS AI level
+    if(!musicMutedRef.current){
+      try{bgMusicRef.current?.pause?.();}catch{}
+      const picks=[bgMusic2,bgMusic3,bgMusic4,bgMusic5];
+      const prev=picks.indexOf(bgMusicRef.current);
+      let ni=Math.floor(Math.random()*picks.length);
+      if(ni===prev) ni=(ni+1)%picks.length;
+      const t2=picks[ni]; bgMusicRef.current=t2; t2.loop=true; t2.seekTo(0); t2.play();
+    }
     setShooting(false); shootingSV.value = false;
     bActive.value = false; bx.value = SW/2; by.value = PLAY_TOP-20;
     hitThisShot.current.clear(); comboRef.current = 0; setCombo(0);
@@ -1193,6 +1231,7 @@ export default function TestPlayScreen() {
   };
 
   const restartLevel=()=>{
+    clearSkrCountdown();
     victoryRef.current=false; allSkrHitRef.current=false; allSkrTouchedSV.value=false;
     if(ballsRef.current<=0){Alert.alert(t('no_balls_left'));return;}
     ballsRef.current--; setBalls(ballsRef.current);
@@ -1703,6 +1742,9 @@ export default function TestPlayScreen() {
     {/* Zoom is silent - no text indicator needed */}
     {freeBallShow&&<View style={st.freeBallBox} pointerEvents="none"><Text style={st.freeBallText}>{t('free_ball')}</Text></View>}
     {missShow&&<View style={[st.missBox,{left:missX-45}]} pointerEvents="none"><Text style={st.missText}>{t('miss')}</Text></View>}
+    {skrCountdown!==null&&<View style={{position:'absolute',top:0,left:0,right:0,bottom:0,alignItems:'center',justifyContent:'center',zIndex:24}} pointerEvents="none">
+      <Text style={{color:skrCountdown<=3?'#EF4444':'#FFD700',fontSize:120,fontWeight:'900',fontFamily:'monospace',textShadowColor:skrCountdown<=3?'rgba(239,68,68,0.8)':'rgba(255,215,0,0.8)',textShadowRadius:30,opacity:0.92}}>{skrCountdown}</Text>
+    </View>}
     {skrFlash&&<View style={{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(255,255,255,0.3)',zIndex:25}} pointerEvents="none"/>}
     {seekerDestroyedText&&<View style={{position:'absolute',top:SH/3-20,width:'100%',alignItems:'center',zIndex:22}} pointerEvents="none">
       <Text style={{color:'#FFD700',fontSize:28,fontWeight:'900',fontFamily:'monospace',textShadowColor:'rgba(255,215,0,0.9)',textShadowRadius:25,letterSpacing:4}}>{t('seeker_destroyed')}</Text>
