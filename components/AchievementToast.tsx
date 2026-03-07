@@ -136,7 +136,7 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
               style={[st.payBtn, { borderColor: rarityColor }]}>
               {paying
                 ? <ActivityIndicator color={rarityColor} size="small"/>
-                : <Text style={[st.payBtnText, { color: rarityColor }]}>🔓 {skrFee} SKR ($0.25) UNLOCK</Text>
+                : <Text style={[st.payBtnText, { color: rarityColor }]}>🔓 {skrFee} SKR UNLOCK</Text>
               }
             </TouchableOpacity>
             <TouchableOpacity onPress={dismissToast} style={st.skipBtn}>

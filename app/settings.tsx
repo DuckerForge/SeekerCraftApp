@@ -341,7 +341,7 @@ export default function SettingsScreen(){
                             {isPaying?<ActivityIndicator color={C.yellow} size="small"/>:(
                               <>
                                 <Text style={{color:C.yellow,fontSize:11,fontWeight:'900',fontFamily:'monospace'}}>🔓 {t('unlock')}</Text>
-                                <Text style={{color:C.yellow,fontSize:10,fontFamily:'monospace'}}>{skrFee} SKR ($0.25)</Text>
+                                <Text style={{color:C.yellow,fontSize:10,fontFamily:'monospace'}}>{skrFee} SKR</Text>
                               </>
                             )}
                           </TouchableOpacity>
