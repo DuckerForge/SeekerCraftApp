@@ -31,7 +31,7 @@ export const CLUSTER      = 'mainnet-beta' as const
 
 // ─── PRICES ──────────────────────────────────────────────────────────────────
 export const PUBLISH_FEE_USD     = 0.25  // $0.25 USD converted to SKR at current price
-export const ACHIEVEMENT_FEE_SKR = 0.25  // fixed 0.25 SKR tokens
+export const ACHIEVEMENT_FEE_USD = 0.25  // $0.25 USD converted to SKR at current price
 
 // ─── TOKEN PRICES ────────────────────────────────────────────────────────────
 let _skrPriceCache: { price: number; at: number } | null = null
@@ -223,11 +223,15 @@ export const payPublishFee = async (userWallet: string): Promise<PaymentResult> 
   }
 }
 
-// ─── ACHIEVEMENT FEE (0.25 SKR fixed, 50% dev, 50% pool) ────────────────────
+// ─── ACHIEVEMENT FEE ($0.25 USD converted to SKR, 50% dev, 50% pool) ─────────
 export const payAchievementFee = async (userWallet: string): Promise<PaymentResult> => {
   let txSig = ''
   try {
-    const skrLamports = Math.floor(ACHIEVEMENT_FEE_SKR * (10 ** SKR_DECIMALS))
+    const skrPrice = await getSKRPriceUSD()
+    const skrAmount = ACHIEVEMENT_FEE_USD / skrPrice          // e.g. 0.25 / 0.025 = 10 SKR
+    const skrLamports = Math.floor(skrAmount * (10 ** SKR_DECIMALS))
+    if (skrLamports <= 0) throw new Error(`Bad SKR amount: ${skrAmount} (price $${skrPrice})`)
+
     const connection = new Connection(HELIUS_RPC, 'confirmed')
 
     await transact(async (wallet: Web3MobileWallet) => {
@@ -239,7 +243,7 @@ export const payAchievementFee = async (userWallet: string): Promise<PaymentResu
       try {
         const acct = await getAccount(connection, senderATA)
         if (Number(acct.amount) < skrLamports)
-          throw new Error(`Insufficient SKR. Need ${ACHIEVEMENT_FEE_SKR} SKR, have ${(Number(acct.amount) / (10 ** SKR_DECIMALS)).toFixed(2)} SKR`)
+          throw new Error(`Insufficient SKR. Need ${skrAmount.toFixed(2)} SKR, have ${(Number(acct.amount) / (10 ** SKR_DECIMALS)).toFixed(2)} SKR`)
       } catch (e: any) {
         if (e.message?.includes('Insufficient')) throw e
         throw new Error('No SKR token account. Buy SKR first.')
@@ -263,7 +267,7 @@ export const payAchievementFee = async (userWallet: string): Promise<PaymentResu
       await connection.confirmTransaction({ signature: txSig, blockhash, lastValidBlockHeight }, 'confirmed')
     })
 
-    return { success: true, txSignature: txSig, skrAmount: ACHIEVEMENT_FEE_SKR }
+    return { success: true, txSignature: txSig, usdAmount: ACHIEVEMENT_FEE_USD, skrAmount }
   } catch (err: any) {
     return { success: false, error: err.message || 'SKR payment failed' }
   }

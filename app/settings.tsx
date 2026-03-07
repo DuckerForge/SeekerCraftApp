@@ -10,7 +10,7 @@ import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { update, ref } from 'firebase/database';
 import { logActivity, database, unlockAchievement, getDuelRecord } from '@/utils/firebase';
-import { payAchievementFee } from '@/utils/payments';
+import { payAchievementFee, getSKRPriceUSD, ACHIEVEMENT_FEE_USD } from '@/utils/payments';
 import { useWallet } from '@/utils/walletContext';
 import BallSkinPicker from '@/components/BallSkinPicker';
 import { ACHIEVEMENTS, ACHIEVEMENT_MAP, RARITY_COLORS, type Rarity } from '@/utils/achievements';
@@ -53,6 +53,7 @@ export default function SettingsScreen(){
   const [duelRecord,setDuelRecord]=useState({wins:0,losses:0,draws:0});
   const visitedTabsRef=useRef<Set<string>>(new Set(['stats']));
   const [achFilter,setAchFilter]=useState<string>('all');
+  const [skrFee,setSkrFee]=useState<string>('...');
   const [payingAch,setPayingAch]=useState<string|null>(null);
   const [showBallSkins,setShowBallSkins]=useState(false);
   const [selectedBallSkin,setSelectedBallSkin]=useState('default');
@@ -61,6 +62,7 @@ export default function SettingsScreen(){
     AsyncStorage.getItem('earnable_achievements').then(v=>{if(v){try{setEarnableKeys(new Set(JSON.parse(v)));}catch{}}});
     AsyncStorage.getItem('global_muted').then(v=>setMuted(v==='1'));
     AsyncStorage.getItem('ball_skin_selected').then(v=>{if(v)setSelectedBallSkin(v);});
+    getSKRPriceUSD().then(p=>setSkrFee((ACHIEVEMENT_FEE_USD/p).toFixed(2))).catch(()=>{});
     refreshUser();
     if(user?.walletAddress) getDuelRecord(user.walletAddress).then(setDuelRecord).catch(()=>{});
   },[]));
@@ -339,7 +341,7 @@ export default function SettingsScreen(){
                             {isPaying?<ActivityIndicator color={C.yellow} size="small"/>:(
                               <>
                                 <Text style={{color:C.yellow,fontSize:11,fontWeight:'900',fontFamily:'monospace'}}>🔓 {t('unlock')}</Text>
-                                <Text style={{color:C.yellow,fontSize:10,fontFamily:'monospace'}}>{t('unlock_pay')}</Text>
+                                <Text style={{color:C.yellow,fontSize:10,fontFamily:'monospace'}}>{skrFee} SKR ($0.25)</Text>
                               </>
                             )}
                           </TouchableOpacity>

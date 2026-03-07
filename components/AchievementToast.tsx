@@ -4,7 +4,7 @@ import { Animated, View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, 
 import { ACHIEVEMENT_MAP, RARITY_COLORS, RARITY_GLOW } from '@/utils/achievements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // FIX: static imports (dynamic import inside functions crashes)
-import { payAchievementFee } from '@/utils/payments';
+import { payAchievementFee, getSKRPriceUSD, ACHIEVEMENT_FEE_USD } from '@/utils/payments';
 import { unlockAchievement, logActivity } from '@/utils/firebase';
 
 const { width: SW } = Dimensions.get('window');
@@ -21,6 +21,7 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
   const fillAnim = useRef(new Animated.Value(0)).current;
   const [paying, setPaying] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [skrFee, setSkrFee] = useState<string>('...');
   const timerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
     setUnlocked(false);
     setPaying(false);
     fillAnim.setValue(0);
+    getSKRPriceUSD().then(p => setSkrFee((ACHIEVEMENT_FEE_USD / p).toFixed(2))).catch(() => {});
 
     Animated.parallel([
       Animated.spring(slideY, { toValue: 0, tension: 80, friction: 12, useNativeDriver: true }),
@@ -134,7 +136,7 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
               style={[st.payBtn, { borderColor: rarityColor }]}>
               {paying
                 ? <ActivityIndicator color={rarityColor} size="small"/>
-                : <Text style={[st.payBtnText, { color: rarityColor }]}>🔓 $0.50 UNLOCK</Text>
+                : <Text style={[st.payBtnText, { color: rarityColor }]}>🔓 {skrFee} SKR ($0.25) UNLOCK</Text>
               }
             </TouchableOpacity>
             <TouchableOpacity onPress={dismissToast} style={st.skipBtn}>
