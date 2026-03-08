@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { useWallet } from '@/utils/walletContext';
 import {
   getNews, hasSeenOnboarding, markOnboardingDone,
-  logActivity, getChallengeNotifications, deletePublishedGame,
+  logActivity, getChallengeNotifications, deletePublishedGame, getPvpRooms,
 } from '@/utils/firebase';
 import { ref, onValue } from 'firebase/database';
 import { database } from '@/utils/firebase';
@@ -178,6 +178,7 @@ export default function HomeScreen(){
   const [earnableCount,setEarnableCount]=useState(0);
   const [showMyGames,setShowMyGames]=useState(false);
   const [myGamesList,setMyGamesList]=useState<any[]>([]);
+  const [waitingRooms,setWaitingRooms]=useState(0);
   const joinedLoggedRef=useRef(false);
 
   // Sound effects only — main music is managed by GlobalMusicPlayer in app-providers
@@ -221,6 +222,10 @@ export default function HomeScreen(){
     AsyncStorage.getItem('global_muted').then(v=>{setGlobalMuted(v==='1');});
     if(user?.walletAddress) getChallengeNotifications(user.walletAddress).then(n=>setChallengeCount(n.length)).catch(()=>{});
     AsyncStorage.getItem('earnable_achievements').then(v=>{try{setEarnableCount(v?JSON.parse(v).length:0);}catch{setEarnableCount(0);}}).catch(()=>{});
+    // Poll for waiting PVP rooms
+    getPvpRooms().then(rooms=>setWaitingRooms(rooms.filter((r:any)=>r.host?.wallet!==user?.walletAddress).length)).catch(()=>{});
+    const pvpPoll=setInterval(()=>getPvpRooms().then(rooms=>setWaitingRooms(rooms.filter((r:any)=>r.host?.wallet!==user?.walletAddress).length)).catch(()=>{}),20000);
+    return()=>clearInterval(pvpPoll);
     // Global music (main.mp3) is managed by AppProviders — no need to control here
   },[connected]));
 
@@ -457,6 +462,24 @@ export default function HomeScreen(){
         </ScrollView>
       </SafeAreaView>
 
+
+      {/* FLOATING PVP WAITING INDICATOR */}
+      {waitingRooms>0&&(
+        <TouchableOpacity
+          onPress={()=>{playSword();router.push('/pvp-online' as any);}}
+          style={{position:'absolute',left:0,top:'42%',zIndex:50,
+            backgroundColor:'rgba(255,77,109,0.95)',borderTopRightRadius:20,borderBottomRightRadius:20,
+            paddingVertical:14,paddingLeft:10,paddingRight:14,
+            shadowColor:'#FF4D6D',shadowRadius:12,shadowOpacity:0.9,elevation:10,
+            borderWidth:1.5,borderColor:'rgba(255,255,255,0.25)',borderLeftWidth:0,
+            alignItems:'center',gap:4}}>
+          <Text style={{fontSize:22}}>⚔️</Text>
+          <View style={{backgroundColor:'#fff',borderRadius:10,minWidth:20,height:20,alignItems:'center',justifyContent:'center',paddingHorizontal:4}}>
+            <Text style={{color:'#FF4D6D',fontSize:11,fontWeight:'900'}}>{waitingRooms}</Text>
+          </View>
+          <Text style={{color:'#fff',fontSize:8,fontWeight:'900',fontFamily:'monospace',letterSpacing:0.5,marginTop:2}}>DUEL</Text>
+        </TouchableOpacity>
+      )}
 
       {/* WELCOME MODAL */}
       <Modal visible={showWelcome} transparent animationType="fade">

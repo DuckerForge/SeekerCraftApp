@@ -396,10 +396,13 @@ export default function TestPlayScreen() {
     return ()=>cancelAnimationFrame(raf);
   },[]);
 
-  useEffect(()=>{ loadLevel().then(()=>{
-    // Start PVP shot timer for first shot after a brief delay
-    setTimeout(()=>{if(pvpRoomIdRef.current&&!aiModeRef.current) startPvpTimer();},500);
-  }); return()=>{stopPvpTimer();}; },[]);
+  useEffect(()=>{
+    (global as any).inGameplay=true;
+    loadLevel().then(()=>{
+      setTimeout(()=>{if(pvpRoomIdRef.current&&!aiModeRef.current) startPvpTimer();},500);
+    });
+    return()=>{ (global as any).inGameplay=false; stopPvpTimer(); };
+  },[]);
   // Replay auto-fire
   useEffect(()=>{
     if(loading||!isReplayModeRef.current||replayQueueRef.current.length===0) return;
@@ -1187,8 +1190,8 @@ export default function TestPlayScreen() {
     shotLogRef.current.push({angle:aimAngle.value,bonusUsed:activePowerRef.current,pegsHitCount:0,score:0});
     // Set velocity — if longShot, use 2.5x speed directly (no race condition with frame callback)
     const isLong=activePowerRef.current==='longShot';
-    const shotSpeed=isLong?INITIAL_SHOT_SPEED*2.5:INITIAL_SHOT_SPEED;
-    if(isLong) maxVelSV.value=MAX_VELOCITY*3;
+    const shotSpeed=isLong?INITIAL_SHOT_SPEED*1.5:INITIAL_SHOT_SPEED;
+    if(isLong) maxVelSV.value=MAX_VELOCITY*1.8;
     bvx.value=Math.cos(aimAngle.value)*shotSpeed;
     bvy.value=Math.sin(aimAngle.value)*shotSpeed;
     // Multiball: don't spawn yet — wait for first peg hit (prevents corner sticking)
@@ -2061,9 +2064,9 @@ export default function TestPlayScreen() {
       const r=Math.round(128+127*Math.sin(t*1.1));
       const g=Math.round(128+127*Math.sin(t*1.1+2.09));
       const b=Math.round(128+127*Math.sin(t*1.1+4.19));
-      const glow=`rgba(${r},${g},${b},${vignetteOpacity*0.35})`;
-      const glow2=`rgba(${b},${r},${g},${vignetteOpacity*0.28})`;
-      return <View style={{...StyleSheet.absoluteFillObject,zIndex:8,top:PLAY_TOP,overflow:'hidden'}} pointerEvents="none">
+      const glow=`rgba(${r},${g},${b},${vignetteOpacity*0.18})`;
+      const glow2=`rgba(${b},${r},${g},${vignetteOpacity*0.14})`;
+      return <View style={{...StyleSheet.absoluteFillObject,zIndex:8,overflow:'hidden'}} pointerEvents="none">
         <LinearGradient colors={[glow,'transparent']} style={{position:'absolute',top:0,left:0,right:0,height:160}}/>
         <LinearGradient colors={['transparent',glow]} style={{position:'absolute',bottom:0,left:0,right:0,height:160}}/>
         <LinearGradient colors={[glow2,'transparent']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,left:0,bottom:0,width:90}}/>
@@ -2072,11 +2075,11 @@ export default function TestPlayScreen() {
     })()}
     {/* Last-ball premium pulsing red border */}
     {balls===1&&!victory&&!gameOver&&(
-      <Animated.View style={{...StyleSheet.absoluteFillObject,zIndex:9,top:PLAY_TOP,opacity:lastBallPulse}} pointerEvents="none">
-        <LinearGradient colors={['rgba(255,0,60,0.85)','transparent']} style={{position:'absolute',top:0,left:0,right:0,height:80}}/>
-        <LinearGradient colors={['transparent','rgba(255,0,60,0.85)']} style={{position:'absolute',bottom:0,left:0,right:0,height:80}}/>
-        <LinearGradient colors={['rgba(255,0,60,0.7)','transparent']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,left:0,bottom:0,width:70}}/>
-        <LinearGradient colors={['transparent','rgba(255,0,60,0.7)']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,right:0,bottom:0,width:70}}/>
+      <Animated.View style={{...StyleSheet.absoluteFillObject,zIndex:9,opacity:lastBallPulse}} pointerEvents="none">
+        <LinearGradient colors={['rgba(255,0,60,0.6)','transparent']} style={{position:'absolute',top:0,left:0,right:0,height:80}}/>
+        <LinearGradient colors={['transparent','rgba(255,0,60,0.6)']} style={{position:'absolute',bottom:0,left:0,right:0,height:80}}/>
+        <LinearGradient colors={['rgba(255,0,60,0.5)','transparent']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,left:0,bottom:0,width:70}}/>
+        <LinearGradient colors={['transparent','rgba(255,0,60,0.5)']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,right:0,bottom:0,width:70}}/>
         <View style={{position:'absolute',top:12,alignSelf:'center',backgroundColor:'rgba(255,0,60,0.9)',borderRadius:14,paddingHorizontal:14,paddingVertical:5,borderWidth:1.5,borderColor:'rgba(255,255,255,0.5)'}}>
           <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:11,letterSpacing:2}}>LAST BALL</Text>
         </View>

@@ -100,13 +100,14 @@ export default function GamePlayScreen() {
   const mutedRef = useRef(false);
 
   useEffect(()=>{
+    (global as any).inGameplay=true;
     AsyncStorage.getItem('global_muted').then(v=>{mutedRef.current=v==='1';});
     const {DeviceEventEmitter}=require('react-native');
     const sub=DeviceEventEmitter.addListener('MUTE_CHANGED',({muted}:{muted:boolean})=>{
       mutedRef.current=muted;
       try{muted?activeMusicRef.current?.pause?.():activeMusicRef.current?.play();}catch{}
     });
-    return()=>sub.remove();
+    return()=>{ (global as any).inGameplay=false; sub.remove(); };
   },[]);
 
   const playLevelMusic=(levelIndex:number)=>{

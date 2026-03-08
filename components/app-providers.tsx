@@ -65,7 +65,7 @@ function InnerProviders({ children }: PropsWithChildren) {
       if (!key) return
       if (shownRef.current.has(key)) return
       shownRef.current.add(key)
-      setQueue(prev => (prev.includes(key) ? prev : [...prev, key]))
+      // Always save to earnable_achievements regardless of context
       import('@react-native-async-storage/async-storage').then(({ default: AS }) => {
         AS.getItem('earnable_achievements').then(v => {
           const arr: string[] = v ? JSON.parse(v) : []
@@ -73,6 +73,9 @@ function InnerProviders({ children }: PropsWithChildren) {
             AS.setItem('earnable_achievements', JSON.stringify([...arr, key]))
         })
       })
+      // Only show toast on index (not during gameplay)
+      if ((global as any).inGameplay) return
+      setQueue(prev => (prev.includes(key) ? prev : [...prev, key]))
     }
     return () => { delete (global as any).showAchievement }
   }, [])

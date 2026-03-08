@@ -1,11 +1,9 @@
 // components/AchievementToast.tsx - Steam-style achievement notification with fee gate
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { Animated, View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { ACHIEVEMENT_MAP, RARITY_COLORS, RARITY_GLOW } from '@/utils/achievements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// FIX: static imports (dynamic import inside functions crashes)
-import { payAchievementFee, getSKRPriceUSD, ACHIEVEMENT_FEE_USD } from '@/utils/payments';
-import { unlockAchievement, logActivity } from '@/utils/firebase';
+import { getSKRPriceUSD, ACHIEVEMENT_FEE_USD } from '@/utils/payments';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -19,8 +17,7 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
   const opacity  = useRef(new Animated.Value(0)).current;
   // FIX: use 'width' animation instead of scaleX + transformOrigin (unsupported in RN)
   const fillAnim = useRef(new Animated.Value(0)).current;
-  const [paying, setPaying] = useState(false);
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked] = useState(false);
   const [skrFee, setSkrFee] = useState<string>('...');
   const timerRef = useRef<any>(null);
 
@@ -32,10 +29,8 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
     if (!ach) { onDone(); return; }
 
     // FIX: removed achievements_seen blocking — show every time until paid/unlocked
-    setUnlocked(false);
-    setPaying(false);
     fillAnim.setValue(0);
-    getSKRPriceUSD().then(p => setSkrFee((ACHIEVEMENT_FEE_USD / p).toFixed(2))).catch(() => {});
+    getSKRPriceUSD().then(p => { const amt=ACHIEVEMENT_FEE_USD/p; setSkrFee(String(+amt.toFixed(4))); }).catch(() => {});
 
     Animated.parallel([
       Animated.spring(slideY, { toValue: 0, tension: 80, friction: 12, useNativeDriver: true }),
@@ -60,42 +55,18 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
     });
   };
 
-  const handlePayToUnlock = async () => {
+  const handleClaimLater = async () => {
     if (!achievementKey) return;
-    setPaying(true);
     if (timerRef.current) clearTimeout(timerRef.current);
-
     try {
-      const addr = await AsyncStorage.getItem('wallet_address');
-      if (!addr) {
-        Alert.alert('Connect wallet first');
-        setPaying(false);
-        return;
+      const stored = await AsyncStorage.getItem('earnable_achievements');
+      const arr: string[] = stored ? JSON.parse(stored) : [];
+      if (!arr.includes(achievementKey)) {
+        arr.push(achievementKey);
+        await AsyncStorage.setItem('earnable_achievements', JSON.stringify(arr));
       }
-
-      const result = await payAchievementFee(addr);
-
-      if (result.success) {
-        await unlockAchievement(addr, achievementKey);
-
-        const displayName = await AsyncStorage.getItem('display_name') || addr.slice(0, 8);
-        const ach = ACHIEVEMENT_MAP[achievementKey];
-        logActivity(addr, displayName, 'achievement_unlocked', ach?.name || achievementKey).catch(() => {});
-
-        setUnlocked(true);
-        // FIX: width animation from 0 → '100%' — useNativeDriver false required
-        Animated.timing(fillAnim, { toValue: 1, duration: 1200, useNativeDriver: false }).start();
-
-        timerRef.current = setTimeout(() => { dismissToast(); }, 3000);
-      } else {
-        Alert.alert('Payment Failed', result.error || 'Transaction rejected');
-        timerRef.current = setTimeout(() => { dismissToast(); }, 2000);
-      }
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Could not process payment');
-      timerRef.current = setTimeout(() => { dismissToast(); }, 2000);
-    }
-    setPaying(false);
+    } catch {}
+    dismissToast();
   };
 
   if (!achievementKey) return null;
@@ -132,12 +103,9 @@ export default function AchievementToast({ achievementKey, onDone }: Props) {
 
         {!unlocked && (
           <View style={st.actionRow}>
-            <TouchableOpacity onPress={handlePayToUnlock} disabled={paying}
+            <TouchableOpacity onPress={handleClaimLater}
               style={[st.payBtn, { borderColor: rarityColor }]}>
-              {paying
-                ? <ActivityIndicator color={rarityColor} size="small"/>
-                : <Text style={[st.payBtnText, { color: rarityColor }]}>🔓 {skrFee} SKR UNLOCK</Text>
-              }
+              <Text style={[st.payBtnText, { color: rarityColor }]}>🔓 {skrFee} SKR → CLAIM</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={dismissToast} style={st.skipBtn}>
               <Text style={st.skipBtnText}>✕</Text>
