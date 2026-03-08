@@ -6,11 +6,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { update, ref } from 'firebase/database';
 import { logActivity, database, unlockAchievement, getDuelRecord } from '@/utils/firebase';
-import { payAchievementFee, getSKRPriceUSD, ACHIEVEMENT_FEE_USD } from '@/utils/payments';
+import { payAchievementFee, getSKRPriceUSD, getSKRBalance, ACHIEVEMENT_FEE_USD } from '@/utils/payments';
 import { useWallet } from '@/utils/walletContext';
 import BallSkinPicker from '@/components/BallSkinPicker';
 import { ACHIEVEMENTS, ACHIEVEMENT_MAP, RARITY_COLORS, type Rarity } from '@/utils/achievements';
@@ -35,6 +35,7 @@ const C = {
 
 export default function SettingsScreen(){
   const {t}=useTranslation();
+  const {tab:tabParam}=useLocalSearchParams<{tab?:string}>();
   const {user,connected,disconnect,switchAccount,refreshUser}=useWallet();
   const [editingName,setEditingName]=useState(false);
   const [earnableKeys,setEarnableKeys]=useState<Set<string>>(new Set());
@@ -49,9 +50,12 @@ export default function SettingsScreen(){
     return()=>sub.remove();
   },[]);
   const playSkr=()=>{if(mutedRef.current)return;try{skrPlayer.seekTo(0);skrPlayer.play();}catch{}};
-  const [tab,setTab]=useState<'stats'|'achievements'|'wallet'|'privacy'|'trophies'>('stats');
+  const validTabs=['stats','achievements','wallet','privacy','trophies'] as const;
+  const initTab=(validTabs as readonly string[]).includes(tabParam||'')?tabParam as typeof validTabs[number]:'stats';
+  const [tab,setTab]=useState<typeof validTabs[number]>(initTab);
+  const [earnableIdx,setEarnableIdx]=useState(0);
   const [duelRecord,setDuelRecord]=useState({wins:0,losses:0,draws:0});
-  const visitedTabsRef=useRef<Set<string>>(new Set(['stats']));
+  const visitedTabsRef=useRef<Set<string>>(new Set([initTab]));
   const [achFilter,setAchFilter]=useState<string>('all');
   const [skrFee,setSkrFee]=useState<string>('...');
   const [payingAch,setPayingAch]=useState<string|null>(null);
@@ -62,7 +66,7 @@ export default function SettingsScreen(){
     AsyncStorage.getItem('earnable_achievements').then(v=>{if(v){try{setEarnableKeys(new Set(JSON.parse(v)));}catch{}}});
     AsyncStorage.getItem('global_muted').then(v=>setMuted(v==='1'));
     AsyncStorage.getItem('ball_skin_selected').then(v=>{if(v)setSelectedBallSkin(v);});
-    getSKRPriceUSD().then(p=>setSkrFee((ACHIEVEMENT_FEE_USD/p).toFixed(2))).catch(()=>{});
+    getSKRPriceUSD().then(p=>{const amt=ACHIEVEMENT_FEE_USD/p;setSkrFee(String(+amt.toFixed(4)));}).catch(()=>{});
     refreshUser();
     if(user?.walletAddress) getDuelRecord(user.walletAddress).then(setDuelRecord).catch(()=>{});
   },[]));
@@ -93,6 +97,10 @@ export default function SettingsScreen(){
     try{
       const addr=user?.walletAddress;
       if(!addr){Alert.alert(t('connect_wallet_first'));setPayingAch(null);return;}
+      const skrPrice=await getSKRPriceUSD().catch(()=>0);
+      const needed=skrPrice>0?ACHIEVEMENT_FEE_USD/skrPrice:0;
+      const balance=await getSKRBalance(addr).catch(()=>0);
+      if(needed>0&&balance<needed){Alert.alert('Not enough SKR',`You need ${needed%1===0?Math.round(needed):needed.toFixed(2)} SKR to unlock this achievement.`);setPayingAch(null);return;}
       const result=await payAchievementFee(addr);
       if(result.success){
         await unlockAchievement(addr,key);
@@ -188,6 +196,9 @@ export default function SettingsScreen(){
             </View>
             {/* Achievement badge */}
             <View style={{alignItems:'center',backgroundColor:'rgba(255,255,255,0.12)',borderRadius:18,padding:14,borderWidth:2.5,borderColor:`${C.yellow}60`,minWidth:80}}>
+              <View style={{position:'absolute',top:-10,right:-10,backgroundColor:C.yellow,borderRadius:14,minWidth:28,height:28,alignItems:'center',justifyContent:'center',paddingHorizontal:6,borderWidth:2.5,borderColor:'#1a1a2e',zIndex:2}}>
+                <Text style={{color:'#1a1a2e',fontSize:12,fontWeight:'900',fontFamily:'monospace'}}>{unlockedCount}</Text>
+              </View>
               <Image source={ICON_COPPA} style={{width:48,height:48,resizeMode:'contain',marginBottom:6}}/>
               <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:16}}>{unlockedCount}/{totalCount}</Text>
               <Text style={{color:'rgba(255,255,255,0.5)',fontFamily:'monospace',fontSize:9,marginTop:2,letterSpacing:1}}>BADGES</Text>
@@ -271,6 +282,46 @@ export default function SettingsScreen(){
           {/* ── ACHIEVEMENTS ── */}
           {tab==='achievements'&&(
             <View style={{paddingHorizontal:16}}>
+              {/* READY TO CLAIM — one at a time carousel */}
+              {earnableKeys.size>0&&(()=>{
+                const earnableArr=Array.from(earnableKeys);
+                const idx=Math.min(earnableIdx,earnableArr.length-1);
+                const key=earnableArr[idx];
+                const ach=ACHIEVEMENT_MAP[key];
+                const isPaying=payingAch===key;
+                if(!ach) return null;
+                return (
+                  <View style={{backgroundColor:'rgba(255,215,0,0.08)',borderRadius:20,borderWidth:2,borderColor:`${C.yellow}50`,padding:16,marginBottom:16}}>
+                    <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                      <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:11,letterSpacing:2}}>⭐ READY TO CLAIM</Text>
+                      <Text style={{color:'rgba(255,255,255,0.4)',fontFamily:'monospace',fontSize:11}}>{idx+1} / {earnableArr.length}</Text>
+                    </View>
+                    <View style={{flexDirection:'row',alignItems:'center',gap:12,marginBottom:14}}>
+                      <Text style={{fontSize:36}}>{ach.icon||'🏅'}</Text>
+                      <View style={{flex:1}}>
+                        <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:15}}>{ach.name}</Text>
+                        <Text style={{color:'rgba(255,255,255,0.55)',fontFamily:'monospace',fontSize:11,marginTop:3}}>{ach.description}</Text>
+                      </View>
+                    </View>
+                    <View style={{flexDirection:'row',gap:10,alignItems:'center'}}>
+                      <TouchableOpacity onPress={()=>setEarnableIdx(i=>Math.max(0,i-1))} disabled={idx===0}
+                        style={{width:42,height:42,borderRadius:21,backgroundColor:'rgba(255,255,255,0.08)',alignItems:'center',justifyContent:'center',opacity:idx===0?0.3:1}}>
+                        <Text style={{color:'#fff',fontSize:20}}>‹</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>handlePayAchievement(key)} disabled={!!payingAch}
+                        style={{flex:1,backgroundColor:`${C.yellow}20`,borderRadius:14,borderWidth:2,borderColor:`${C.yellow}60`,paddingVertical:12,alignItems:'center',opacity:payingAch&&!isPaying?0.4:1}}>
+                        {isPaying?<ActivityIndicator color={C.yellow} size="small"/>:(
+                          <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:13}}>🔓 UNLOCK — {skrFee} SKR</Text>
+                        )}
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={()=>setEarnableIdx(i=>Math.min(earnableArr.length-1,i+1))} disabled={idx===earnableArr.length-1}
+                        style={{width:42,height:42,borderRadius:21,backgroundColor:'rgba(255,255,255,0.08)',alignItems:'center',justifyContent:'center',opacity:idx===earnableArr.length-1?0.3:1}}>
+                        <Text style={{color:'#fff',fontSize:20}}>›</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })()}
               {/* Count boxes */}
               <View style={{flexDirection:'row',gap:10,marginBottom:16}}>
                 {[

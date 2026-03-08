@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 try { configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false }); } catch {}
-import { View, Dimensions, Text, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Image } from 'react-native';
+import { View, Dimensions, Text, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Image, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSharedValue, useFrameCallback, runOnJS, useDerivedValue } from 'react-native-reanimated';
@@ -119,7 +119,7 @@ function willBallHitTarget(
       }
     }
     // Too many bounces = unpredictable trajectory, don't zoom
-    if (bounceCount>4) return false;
+    if (bounceCount>2) return false;
     // Ball drained below play area — won't hit
     if (cy>PLAY_BOT+50) return false;
   }
@@ -134,11 +134,12 @@ const MovingObstacleRenderer = ({index,movingObsSV,image}:any) => {
   if (image) return <SkiaImage image={image} x={x} y={y} width={w} height={h}/>;
   return <RoundedRect x={x} y={y} width={w} height={h} r={4} color="#64748B"/>;
 };
-const TrailDot = ({i,trailXs,trailYs,color}:{i:number,trailXs:any,trailYs:any,color:string}) => {
+const TrailDot = ({i,trailXs,trailYs,trailColor}:{i:number,trailXs:any,trailYs:any,trailColor:any}) => {
   const cx=useDerivedValue(()=>trailXs.value[i]??-200);
   const cy=useDerivedValue(()=>trailYs.value[i]??-200);
-  const op=useDerivedValue(()=>trailXs.value.length>i?Math.max(0,0.35-i*0.04):0);
-  return <Circle cx={cx} cy={cy} r={Math.max(1.5,BALL_R-i*0.8)} color={color} opacity={op}/>;
+  const op=useDerivedValue(()=>trailXs.value.length>i?Math.max(0,0.38-i*0.03):0);
+  const col=useDerivedValue(()=>trailColor.value);
+  return <Circle cx={cx} cy={cy} r={Math.max(1.5,BALL_R-i*0.7)} color={col} opacity={op}/>;
 };
 const AimDot = ({i,aimAngle,shootingSV,spacing}:any) => {
   const d=(i+1)*spacing;
@@ -241,6 +242,12 @@ export default function TestPlayScreen() {
   const [skrCountdown, setSkrCountdown] = useState<number|null>(null);
   const skrCountdownRef = useRef<ReturnType<typeof setInterval>|null>(null);
   const skrCountdownWaitRef = useRef<ReturnType<typeof setTimeout>|null>(null);
+  // PVP online state
+  const pvpRoomIdRef = useRef<string|null>(null);
+  const pvpRoleRef = useRef<'host'|'guest'|null>(null);
+  const [pvpOpponentName, setPvpOpponentName] = useState<string|null>(null);
+  const [pvpTimer, setPvpTimer] = useState<number|null>(null);
+  const pvpTimerRef = useRef<ReturnType<typeof setInterval>|null>(null);
 
   const [missShow, setMissShow] = useState(false);
   const [missX, setMissX] = useState(SW/2);
@@ -248,7 +255,7 @@ export default function TestPlayScreen() {
   const [sparkles, setSparkles] = useState<{x:number,y:number,vx:number,vy:number,color:string,opacity:number}[]>([]);
   const [skrFlash, setSkrFlash] = useState(false);
   const [seekerDestroyedText, setSeekerDestroyedText] = useState(false);
-  const [confetti, setConfetti] = useState<{x:number,y:number,vx:number,vy:number,color:string,rot:number}[]>([]);
+  const [confetti, setConfetti] = useState<{x:number,y:number,vx:number,vy:number,color:string,rot:number,spin?:number,wobble?:number,opacity?:number,size?:number,shape?:string}[]>([]);
   const mainBallDrainedSV=useSharedValue(false);
   const bx=useSharedValue(SW/2),by=useSharedValue(PLAY_TOP-20);
   const bvx=useSharedValue(0),bvy=useSharedValue(0);
@@ -286,6 +293,31 @@ export default function TestPlayScreen() {
   const trailXs=useSharedValue<number[]>([]),trailYs=useSharedValue<number[]>([]);
   const movingObsSV=useSharedValue<MovingObs[]>([]);
 
+  // ── Visual Effects SharedValues ───────────────────────────────────────────
+  // Combo mirror for worklet access
+  const comboSV=useSharedValue(0);
+  // Effect 2: peg idle pulse
+  const pulsePhase=useSharedValue(0);
+  // Effect 3: rainbow trail color
+  const trailColor=useSharedValue('rgba(255,255,255,0.6)');
+  // Effect 5: bumper particle burst
+  const bumperParticles=useSharedValue<{x:number,y:number,vx:number,vy:number,life:number,color:string}[]>([]);
+  // Effect 6: peg hit ripple rings
+  const ripples=useSharedValue<{x:number,y:number,r:number,op:number}[]>([]);
+  // Effect 9: tension flash for last 2 SKR pegs
+  const tensionFlash=useSharedValue(false);
+  const tensionTimer=useSharedValue(0);
+  // Effect 4: combo border + last-ball warning
+  const [vignetteOpacity,setVignetteOpacity]=useState(0);
+  const lastBallPulse=useRef(new Animated.Value(0)).current;
+  // Effect 2: pulse state for JS-side peg rendering
+  const [pulseVal,setPulseVal]=useState(0);
+  // Effect 9: tension flash JS state for peg color override
+  const [tensionOn,setTensionOn]=useState(false);
+  // Effect 1: floating background stars (JS-driven)
+  const starsRef=useRef<{x:number,y:number,r:number,speed:number,opacity:number}[]>([]);
+  const [stars,setStars]=useState<{x:number,y:number,r:number,speed:number,opacity:number}[]>([]);
+
   const ballsRef=useRef(10),scoreRef=useRef(0),comboRef=useRef(0);
   const lastDingRef=useRef(0);
   const hitThisShot=useRef(new Set<number>());
@@ -314,7 +346,60 @@ export default function TestPlayScreen() {
   const rollingPeg=useSharedValue<number>(-1);
   const rollingAngle=useSharedValue(0),rollingLaps=useSharedValue(0);
 
-  useEffect(()=>{ loadLevel(); },[]);
+  // Effect 1: floating fireflies — chaotic & colorful, intensity scales with combo
+  useEffect(()=>{
+    const warmColors=['#FFD700','#FFA500','#ADFF2F','#FFE066','#FF8C00','#B8FF5A'];
+    const neonColors=['#FF00FF','#00FFFF','#FF0066','#00FF88','#9945FF','#FF3300','#14F195','#FF69B4'];
+    const allColors=[...warmColors,...neonColors];
+    const s=Array.from({length:32},(_,i)=>({
+      x:Math.random()*SW,
+      y:Math.random()*SH,
+      r:1.0+Math.random()*2.2,
+      baseSpeed:10+Math.random()*20,
+      phase:Math.random()*Math.PI*2,
+      phaseY:Math.random()*Math.PI*2,
+      color:warmColors[i%warmColors.length],
+      colorTimer:Math.random()*3,
+      colorIdx:i%warmColors.length,
+      opacity:0.15+Math.random()*0.3,
+    }));
+    starsRef.current=s as any; setStars(s as any);
+    let raf:number; let last=Date.now(); let t=0;
+    const loop=()=>{
+      const now=Date.now();
+      const dt=Math.min((now-last)/1000,0.05); last=now; t+=dt;
+      const comboNow=comboRef.current;
+      const chaos=Math.min(1,comboNow/12); // 0→1 over combo 0→12
+      const speedMult=1+chaos*3.5; // up to 4.5x faster
+      const swayAmp=0.5+chaos*4.0; // much more sway at high combo
+      const palette=comboNow>=8?allColors:comboNow>=4?[...warmColors,...neonColors.slice(0,4)]:warmColors;
+      starsRef.current=(starsRef.current as any[]).map((f:any)=>{
+        // Color changes faster at higher combo
+        const newTimer=f.colorTimer+dt*(0.3+chaos*2.5);
+        const colorChanged=Math.floor(newTimer)>Math.floor(f.colorTimer);
+        const newColorIdx=colorChanged?(f.colorIdx+1)%palette.length:f.colorIdx;
+        // Rise upward + chaotic horizontal drift
+        let ny=f.y-f.baseSpeed*speedMult*dt;
+        if(ny<-10) ny=SH+10;
+        const swayX=Math.sin(t*1.2*speedMult+f.phase)*swayAmp
+                   +Math.sin(t*2.3+f.phaseY)*swayAmp*chaos*0.6;
+        const nx=Math.max(0,Math.min(SW,f.x+swayX));
+        // Opacity pulses more intensely at high combo
+        const pulse=0.15+0.15*Math.sin(t*(2+chaos*4)+f.phase)+chaos*0.3;
+        return {...f,x:nx,y:ny,opacity:Math.min(0.85,pulse),
+          colorTimer:newTimer,colorIdx:newColorIdx,color:palette[newColorIdx]};
+      });
+      setStars([...starsRef.current as any]);
+      raf=requestAnimationFrame(loop);
+    };
+    raf=requestAnimationFrame(loop);
+    return ()=>cancelAnimationFrame(raf);
+  },[]);
+
+  useEffect(()=>{ loadLevel().then(()=>{
+    // Start PVP shot timer for first shot after a brief delay
+    setTimeout(()=>{if(pvpRoomIdRef.current&&!aiModeRef.current) startPvpTimer();},500);
+  }); return()=>{stopPvpTimer();}; },[]);
   // Replay auto-fire
   useEffect(()=>{
     if(loading||!isReplayModeRef.current||replayQueueRef.current.length===0) return;
@@ -329,6 +414,25 @@ export default function TestPlayScreen() {
     },1200);
     return()=>clearInterval(iv);
   },[loading]);
+
+  // Effect 4: combo border glow
+  useEffect(()=>{
+    if(combo>=5){setVignetteOpacity(Math.min(1,(combo-5)/8)*0.9);}
+    else{setVignetteOpacity(0);}
+  },[combo]);
+
+  // Last-ball premium pulsing border
+  useEffect(()=>{
+    if(balls===1&&!victory&&!gameOver){
+      Animated.loop(Animated.sequence([
+        Animated.timing(lastBallPulse,{toValue:1,duration:500,useNativeDriver:true}),
+        Animated.timing(lastBallPulse,{toValue:0.1,duration:500,useNativeDriver:true}),
+      ])).start();
+    } else {
+      lastBallPulse.stopAnimation();
+      lastBallPulse.setValue(0);
+    }
+  },[balls,victory,gameOver]);
 
   // FIX: force curve re-render after loading completes
   useEffect(()=>{
@@ -572,6 +676,19 @@ export default function TestPlayScreen() {
           await AsyncStorage.removeItem('ai_level_index');
         }
       }
+      // PVP online mode detection
+      const pvpId = await AsyncStorage.getItem('pvp_room_id');
+      const pvpRole = await AsyncStorage.getItem('pvp_role') as 'host'|'guest'|null;
+      const pvpOpp = await AsyncStorage.getItem('pvp_opponent_name');
+      if (pvpId && pvpRole) {
+        pvpRoomIdRef.current = pvpId;
+        pvpRoleRef.current = pvpRole;
+        setPvpOpponentName(pvpOpp || 'Opponent');
+      } else {
+        pvpRoomIdRef.current = null;
+        pvpRoleRef.current = null;
+        setPvpOpponentName(null);
+      }
     } catch { router.back(); }
   };
 
@@ -647,7 +764,7 @@ export default function TestPlayScreen() {
       else if(p.type==='peg_blue') pts=25; else if(p.type==='bumper'||p.type==='bumper_big') pts=15;
       else if(p.type==='curved_left'||p.type==='curved_right') pts=5;
       comboRef.current++; const tot=pts*Math.min(comboRef.current,10);
-      scoreRef.current+=tot; setScore(scoreRef.current); setCombo(comboRef.current);
+      scoreRef.current+=tot; setScore(scoreRef.current); setCombo(comboRef.current); comboSV.value=comboRef.current;
       const pitch=Math.min(1.0+comboRef.current*0.08,1.72);
       // Screen shake only on bumper hits
       if(isBumper){
@@ -663,11 +780,13 @@ export default function TestPlayScreen() {
       // Musical bounces: round-robin ding player pool with ascending pitch
       if(p.type==='peg_gold'){ if(!musicMutedRef.current){ try { skrPlayer.seekTo(0); skrPlayer.play(); } catch {} } }
       else { if(!musicMutedRef.current){ const now=Date.now(); if(now-lastDingRef.current>80){lastDingRef.current=now;try{const pool=[dingPlayer,dingPlayer2,dingPlayer3,dingPlayer4];const dp=pool[dingPoolRef.current%4];dingPoolRef.current++;dp.setPlaybackRate(pitch);dp.seekTo(0);dp.play();}catch{}} } }
-      if(p.type==='bumper'||p.type==='bumper_big'){starPlayer.seekTo(0);starPlayer.play();}
+      if(p.type==='bumper'||p.type==='bumper_big'){if(!musicMutedRef.current){try{starPlayer.seekTo(0);starPlayer.play();}catch{}}}
       const col=p.type==='peg_red'?C.orange:p.type==='peg_gold'?C.gold:p.type==='peg_blue'?C.blue:C.green;
       addPopup(p.x,p.y-25,`+${tot}`,col);
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Effect 6: ripple ring on peg hit (not bumpers)
+    if(!isBumper) spawnRipple(p.x,p.y);
     // Purple peg charge bar: only peg_blue (SOL) hits charge it
     if(!isPlaytestRef.current&&p.type==='peg_blue'){
       if(ultChargeRef.current<100){
@@ -720,45 +839,32 @@ export default function TestPlayScreen() {
         // "SEEKER DESTROYED!" text
         setSeekerDestroyedText(true);
         setTimeout(()=>setSeekerDestroyedText(false),2500);
-        // Victory confetti — SeekerCraft original burst effect
-        // Radial explosion from center + gravity + neon trails
-        const confColors=['#FFD700','#FF4500','#00D4FF','#9945FF','#14F195','#FF69B4','#00FF88','#FF0080'];
-        const shapes=['hex','streak','ring','spark','pixel','bolt'] as const;
-        const cx=SW/2,cy=SH/3;
-        const conf=Array.from({length:25},(_, idx)=>{
-          const angle=Math.random()*Math.PI*2;
-          const speed=120+Math.random()*280;
-          const s=shapes[idx%shapes.length];
-          return {
-            x:cx,y:cy,
-            vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-80,
-            color:confColors[Math.floor(Math.random()*confColors.length)],
-            rot:Math.random()*360,
-            shape:s,
-            size:s==='streak'?12+Math.random()*8:s==='pixel'?3+Math.random()*4:5+Math.random()*8,
-            spin:(Math.random()-0.5)*18,
-            wobble:Math.random()*Math.PI*2,
-            opacity:1,
-            trail:s==='streak'||s==='bolt',
-          };
-        });
-        setConfetti(conf);
-        const confInterval=setInterval(()=>{
-          setConfetti(prev=>{
-            const next=prev.map(c=>({...c,
-              x:c.x+c.vx*0.016,
-              y:c.y+c.vy*0.016,
-              vy:c.vy+220*0.016, // gravity pull
-              vx:c.vx*0.985,
-              rot:c.rot+(c.spin||3),
-              wobble:(c.wobble||0)+0.1,
-              opacity:Math.max(0,(c.opacity||1)-0.008),
-            }));
-            if(next.every(c=>c.y>SH+50||(c.opacity||0)<=0)){clearInterval(confInterval);return[];}
-            return next.filter(c=>(c.opacity||0)>0);
+        // Victory confetti — radial burst from center
+        {
+          const confColors=['#FFD700','#FF4500','#00D4FF','#9945FF','#14F195','#FF69B4','#00FF88','#FF0080'];
+          const shapes=['hex','streak','ring','spark','pixel','bolt'] as const;
+          const cx2=SW/2,cy2=SH/3;
+          const conf=Array.from({length:25},(_,idx)=>{
+            const angle=Math.random()*Math.PI*2;
+            const speed=120+Math.random()*280;
+            const s=shapes[idx%shapes.length];
+            return {x:cx2,y:cy2,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-80,
+              color:confColors[Math.floor(Math.random()*confColors.length)],rot:Math.random()*360,
+              shape:s,size:s==='streak'?12+Math.random()*8:s==='pixel'?3+Math.random()*4:5+Math.random()*8,
+              spin:(Math.random()-0.5)*18,wobble:Math.random()*Math.PI*2,opacity:1};
           });
-        },16);
-        setTimeout(()=>{clearInterval(confInterval);setConfetti([]);},4000);
+          setConfetti(conf);
+          const confInterval=setInterval(()=>{
+            setConfetti(prev=>{
+              const next=prev.map(c=>({...c,x:c.x+(c.vx||0)*0.016,y:c.y+(c.vy||0)*0.016,
+                vy:(c.vy||0)+220*0.016,vx:(c.vx||0)*0.985,rot:c.rot+(c.spin||3),
+                wobble:(c.wobble||0)+0.1,opacity:Math.max(0,(c.opacity??1)-0.008)}));
+              if(next.every(c=>c.y>SH+50||(c.opacity??0)<=0)){clearInterval(confInterval);return[];}
+              return next.filter(c=>(c.opacity??0)>0);
+            });
+          },16);
+          setTimeout(()=>{clearInterval(confInterval);setConfetti([]);},4000);
+        }
         // Countdown: wait 5s, then 10→0 countdown, then force victory
         skrCountdownWaitRef.current=setTimeout(()=>{
           let n=10; setSkrCountdown(n);
@@ -768,10 +874,13 @@ export default function TestPlayScreen() {
               clearInterval(skrCountdownRef.current!); skrCountdownRef.current=null;
               setSkrCountdown(null);
               if(!victoryRef.current){
+                // Stop ball immediately — prevent background scoring
+                bActive.value=false; bx.value=-200; by.value=-200;
                 victoryRef.current=true; setLastSkrHitUI(false); setVictory(true); stopFeverMusic();
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 saveReplayIfChallenge(); saveAmazingReplay();
                 if(aiModeRef.current) logAIResult();
+                reportPvpScore(true); stopPvpTimer();
               }
             } else { setSkrCountdown(n); }
           },1000);
@@ -830,6 +939,21 @@ export default function TestPlayScreen() {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   };
+  // Effect 5: spawn bumper particle burst (called via runOnJS from worklet)
+  const spawnBumperParticles=(x:number,y:number)=>{
+    const colors=['#FFD700','#FF6B00','#FF00FF','#00D4FF','#14F195'];
+    const newP=Array.from({length:8},(_,i)=>{
+      const angle=(i/8)*Math.PI*2+Math.random()*0.4;
+      const spd=80+Math.random()*120;
+      return {x,y,vx:Math.cos(angle)*spd,vy:Math.sin(angle)*spd-60,life:1,color:colors[i%colors.length]};
+    });
+    bumperParticles.value=[...bumperParticles.value,...newP].slice(-64);
+  };
+  // Effect 6: spawn ripple ring (called via runOnJS from worklet)
+  const spawnRipple=(x:number,y:number)=>{
+    ripples.value=[...ripples.value,{x,y,r:2,op:0.6}].slice(-20);
+  };
+
   const addBallJS=()=>{
     ballsRef.current++; setBalls(ballsRef.current);
     addPopup(bucketX.value+BUCKET_W/2,PLAY_BOT-60,'+1 BALL',C.green);
@@ -875,6 +999,43 @@ export default function TestPlayScreen() {
       }
     }catch{}
   };
+  // ── PVP score report ──
+  const reportPvpScore=async(isDone:boolean)=>{
+    const roomId=pvpRoomIdRef.current;
+    const role=pvpRoleRef.current;
+    if(!roomId||!role) return;
+    try{
+      const{updatePvpScore}=require('@/utils/firebase');
+      const ballsUsed=initialBalls-ballsRef.current;
+      await updatePvpScore(roomId,role,scoreRef.current,ballsUsed,isDone);
+      if(isDone){
+        await AsyncStorage.multiRemove(['pvp_room_id','pvp_role','pvp_opponent_name']);
+        pvpRoomIdRef.current=null; pvpRoleRef.current=null; setPvpOpponentName(null);
+      }
+    }catch{}
+  };
+  // ── PVP shot timer ──
+  const startPvpTimer=()=>{
+    if(!pvpRoomIdRef.current) return;
+    if(pvpTimerRef.current) clearInterval(pvpTimerRef.current);
+    setPvpTimer(10);
+    let count=10;
+    pvpTimerRef.current=setInterval(()=>{
+      count--;
+      if(count<=0){
+        clearInterval(pvpTimerRef.current!); pvpTimerRef.current=null;
+        setPvpTimer(null);
+        // Auto-shoot at current aim angle
+        shoot(false);
+      } else {
+        setPvpTimer(count);
+      }
+    },1000);
+  };
+  const stopPvpTimer=()=>{
+    if(pvpTimerRef.current){clearInterval(pvpTimerRef.current);pvpTimerRef.current=null;}
+    setPvpTimer(null);
+  };
   const logAIResult=async()=>{
     try{
       const addr=await AsyncStorage.getItem('wallet_address');
@@ -894,7 +1055,7 @@ export default function TestPlayScreen() {
     mainBallDrainedSV.value=false;
     maxVelSV.value=MAX_VELOCITY; // reset longShot velocity cap
     setShooting(false); shootingSV.value=false;
-    comboRef.current=0; setCombo(0); hitThisShot.current.clear(); rollingPeg.value=-1;
+    comboRef.current=0; setCombo(0); comboSV.value=0; hitThisShot.current.clear(); rollingPeg.value=-1;
     zoomScale.value=1; zoomOffX.value=0; zoomOffY.value=0; zoomCooldownSV.value=0;
     if(feverSV.value){feverSV.value=false; setFeverUI(false);}
     fireballMode.value=false; setIsFireball(false); bucketSpeedMult.value=1;
@@ -951,6 +1112,7 @@ export default function TestPlayScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         saveReplayIfChallenge(); saveAmazingReplay();
         if(aiModeRef.current) logAIResult();
+        reportPvpScore(true); stopPvpTimer();
       } else if(ballsRef.current<=0){
         // AI multi-level: if more levels remain, advance even on ball-out
         if(aiModeRef.current&&aiLevelsPackRef.current.length>1&&aiLevelIndexRef.current<aiLevelsPackRef.current.length-1){
@@ -970,6 +1132,7 @@ export default function TestPlayScreen() {
         setGameOver(true); stopFeverMusic();
         saveReplayIfChallenge(); saveAmazingReplay();
         if(aiModeRef.current) logAIResult();
+        reportPvpScore(true); stopPvpTimer();
       } else if(aiModeRef.current){
         const wasAI = aiTurnRef.current;
         if(!wasAI){
@@ -1001,6 +1164,10 @@ export default function TestPlayScreen() {
           setTimeout(()=>setTurnLabel(null),1500);
         }
       }
+      // Start PVP shot timer if applicable (player's turn, not AI mode, still have balls)
+      if(pvpRoomIdRef.current&&!aiModeRef.current&&!victoryRef.current&&ballsRef.current>0){
+        startPvpTimer();
+      }
     },350);
   };
 
@@ -1009,6 +1176,7 @@ export default function TestPlayScreen() {
     if(bActive.value||mb1Active.value||mb2Active.value||mainBallDrainedSV.value||ballsRef.current<=0||victoryRef.current||gameOver||skrLeft===0) return;
     // Block manual shooting during AI turn (but allow AI itself to shoot)
     if(aiModeRef.current&&aiTurnRef.current&&!isAI) return;
+    stopPvpTimer(); // Stop shot timer when shooting
     setShooting(true); shootingSV.value=true;
     ballsRef.current--; setBalls(ballsRef.current);
     bx.value=SW/2; by.value=PLAY_TOP-20;
@@ -1177,27 +1345,45 @@ export default function TestPlayScreen() {
           let cx=SW/2,cy=PLAY_TOP-20,cvx=vx0,cvy=vy0,score=0,goldHits=0;
           const hitSet=new Set<number>();
           const DT=0.014;
+          // Get walls for obstacle collision
+          const simWalls=walls;
           for(let s=0;s<280;s++){
             cvy+=GRAVITY*DT; cx+=cvx*DT; cy+=cvy*DT;
             if(cx<PAD+BALL_R){cx=PAD+BALL_R;cvx=Math.abs(cvx)*WALL_RESTITUTION;}
             if(cx>SW-PAD-BALL_R){cx=SW-PAD-BALL_R;cvx=-Math.abs(cvx)*WALL_RESTITUTION;}
+            if(cy<PLAY_TOP-50){cy=PLAY_TOP-50;cvy=Math.abs(cvy)*WALL_RESTITUTION;}
+            // Wall/obstacle collision
+            for(const w of simWalls){
+              const clX=Math.max(w.x,Math.min(cx,w.x+w.w));
+              const clY=Math.max(w.y,Math.min(cy,w.y+w.h));
+              const wdx=cx-clX,wdy=cy-clY,wdist=Math.hypot(wdx,wdy);
+              if(wdist<BALL_R&&wdist>0.01){
+                const wnx=wdx/wdist,wny=wdy/wdist;
+                cx=clX+wnx*(BALL_R+0.5);cy=clY+wny*(BALL_R+0.5);
+                const wdot=cvx*wnx+cvy*wny;
+                if(wdot<0){cvx-=(1+WALL_RESTITUTION)*wdot*wnx;cvy-=(1+WALL_RESTITUTION)*wdot*wny;}
+              }
+            }
             for(let j=0;j<allPegsForSim.length;j++){
               if(hitSet.has(j)) continue;
               const pg=allPegsForSim[j];
               const dist=Math.hypot(cx-pg.x,cy-pg.y);
               if(dist<BALL_R+pg.r&&dist>0.01){
-                hitSet.add(j);
+                const isBmp=pg.type==='bumper'||pg.type==='bumper_big';
+                if(!isBmp) hitSet.add(j);
                 if(pg.type==='peg_gold'){score+=20;goldHits++;}
                 else if(pg.type==='peg_red') score+=3;
                 else if(pg.type==='peg_blue') score+=1;
-                // bumpers still bounce but don't score here
-                if(pg.type!=='bumper'&&pg.type!=='bumper_big'){
-                  const nx=(cx-pg.x)/dist,ny=(cy-pg.y)/dist;
-                  const dot=cvx*nx+cvy*ny;
-                  if(dot<0){cvx=(cvx-2*dot*nx)*RESTITUTION;cvy=(cvy-2*dot*ny)*RESTITUTION;}
-                  const spd=Math.hypot(cvx,cvy);
-                  if(spd>MAX_VELOCITY){cvx=cvx/spd*MAX_VELOCITY;cvy=cvy/spd*MAX_VELOCITY;}
+                // ALL pegs bounce the ball (bumpers with BUMPER_BOUNCE)
+                const nx=(cx-pg.x)/dist,ny=(cy-pg.y)/dist;
+                const dot=cvx*nx+cvy*ny;
+                if(dot<0){
+                  const mult=isBmp?BUMPER_BOUNCE:RESTITUTION;
+                  cvx=(cvx-2*dot*nx)*mult;cvy=(cvy-2*dot*ny)*mult;
                 }
+                cx=pg.x+nx*(BALL_R+pg.r+0.5);cy=pg.y+ny*(BALL_R+pg.r+0.5);
+                const spd=Math.hypot(cvx,cvy);
+                if(spd>MAX_VELOCITY){cvx=cvx/spd*MAX_VELOCITY;cvy=cvy/spd*MAX_VELOCITY;}
               }
             }
             if(cy>PLAY_BOT) break;
@@ -1260,6 +1446,50 @@ export default function TestPlayScreen() {
     const rawDt=Math.min((info.timeSincePreviousFrame||16)/1000,0.025);
     if(zoomCooldownSV.value>0) zoomCooldownSV.value-=rawDt;
 
+    // Effect 2: peg idle pulse — cycle phase when ball not active
+    if(!bActive.value){
+      pulsePhase.value=(pulsePhase.value+rawDt*2.2)%(Math.PI*2);
+    }
+
+    // Effect 3: update trail color based on ball speed + combo
+    if(bActive.value){
+      const spd=Math.hypot(bvx.value,bvy.value);
+      if(comboSV.value>=5&&spd>400){trailColor.value='#FF2200';}
+      else if(comboSV.value>=5&&spd>200){trailColor.value='#FF6B00';}
+      else if(spd>600){trailColor.value='#FF4500';}
+      else if(spd>350){trailColor.value='#FF8C00';}
+      else if(spd>150){trailColor.value='#9945FF';}
+      else{trailColor.value='rgba(0,212,255,0.85)';}
+    }
+
+    // Effect 5: update bumper particles
+    if(bumperParticles.value.length>0){
+      const updated=bumperParticles.value
+        .map(p=>({...p,x:p.x+p.vx*rawDt,y:p.y+p.vy*rawDt+120*rawDt,life:p.life-rawDt*1.8}))
+        .filter(p=>p.life>0);
+      bumperParticles.value=updated;
+    }
+
+    // Effect 6: update ripple rings
+    if(ripples.value.length>0){
+      const updated=ripples.value
+        .map(r=>({...r,r:r.r+1.8,op:r.op-0.07}))
+        .filter(r=>r.op>0);
+      ripples.value=updated;
+    }
+
+    // Effect 9: tension flash — rapid toggle at ~4Hz when <=2 SKR remain and ball active
+    if(bActive.value){
+      tensionTimer.value+=rawDt;
+      if(tensionTimer.value>0.125){
+        tensionTimer.value=0;
+        tensionFlash.value=!tensionFlash.value;
+      }
+    } else {
+      tensionFlash.value=false;
+      tensionTimer.value=0;
+    }
+
     // ── SMART ZOOM v7 — precise trigger ─────────────────────────────────────
     let feverNow=false;
     if(bActive.value&&zoomCooldownSV.value<=0&&!allSkrTouchedSV.value){
@@ -1279,7 +1509,7 @@ export default function TestPlayScreen() {
           let shouldZoom=false;
           // Skip zoom if ball is heading toward a teleport peg between it and the target
           let teleportBlocking=false;
-          if(approach>30){
+          if(approach>60){
             for(let ti=0;ti<pX.value.length;ti++){
               if(pH.value[ti]) continue;
               const tt=pT.value[ti];
@@ -1292,12 +1522,12 @@ export default function TestPlayScreen() {
               }
             }
           }
-          if(approach>30&&!teleportBlocking){
+          if(approach>60&&!teleportBlocking&&dist<CELL*12){
             shouldZoom=willBallHitTarget(bx.value,by.value,bvx.value,bvy.value,tx,ty,pX.value,pY.value,pR.value,pH.value,pT.value,lastIdx,wX.value,wY.value,wW.value,wH.value);
           }
           // Sustain: keep zoom if already active and approaching
           if(!shouldZoom&&feverSV.value){
-            if(dist<CELL*6&&approach>30) shouldZoom=true;
+            if(dist<CELL*6&&approach>60) shouldZoom=true;
             // Minimum duration
             if(zoomTimerSV.value<MIN_ZOOM_DURATION) shouldZoom=true;
           }
@@ -1595,9 +1825,10 @@ export default function TestPlayScreen() {
     }
     if(hitSegs.length>0) runOnJS(onCurveHit)(hitSegs);
     } // end else (not vortex)
-    // Trail: record position for visual trail
-    const newTx=[bx.value,...trailXs.value.slice(0,7)];
-    const newTy=[by.value,...trailYs.value.slice(0,7)];
+    // Trail: record position for visual trail (Effect 8: hot ball — longer trail at high combo)
+    const trailMax=comboSV.value>=5?11:7;
+    const newTx=[bx.value,...trailXs.value.slice(0,trailMax)];
+    const newTy=[by.value,...trailYs.value.slice(0,trailMax)];
     trailXs.value=newTx; trailYs.value=newTy;
     } else { // ball not active — clear trail
       if(trailXs.value.length>0){trailXs.value=[];trailYs.value=[];}
@@ -1675,6 +1906,10 @@ export default function TestPlayScreen() {
         const u=popupsRef.current.map(p=>({...p,alpha:p.alpha-0.045,y:p.y-0.8})).filter(p=>p.alpha>0.02);
         popupsRef.current=u; setPopups([...u]);
       }
+      // Effect 2: update pulseVal for peg idle animation
+      setPulseVal(pulsePhase.value);
+      // Effect 9: sync tension flash from SharedValue to JS state
+      setTensionOn(tensionFlash.value);
       // drive peg fade: 400ms full → 350ms fade → gone at 750ms, pR zeroed
       const now=Date.now();
       let needsPegUpdate=false;
@@ -1725,6 +1960,15 @@ export default function TestPlayScreen() {
       <View style={st.stats}><Text style={[st.pegCountText,skrLeft===0&&{color:C.green}]}>{skrLeft}</Text><Text style={st.label}>{t('skr_left')}</Text></View>
       <TouchableOpacity onPress={restartLevel} style={st.restartBtn}><Text style={st.restartText}>{t('rst')}</Text></TouchableOpacity>
     </View>
+    {/* PVP opponent bar + shot timer */}
+    {pvpOpponentName&&<View style={{position:'absolute',top:96,left:0,right:0,alignItems:'center',zIndex:15}} pointerEvents="none">
+      <View style={{flexDirection:'row',alignItems:'center',gap:10,backgroundColor:'rgba(0,0,0,0.65)',borderRadius:14,paddingHorizontal:14,paddingVertical:6,borderWidth:1.5,borderColor:'rgba(255,77,109,0.5)'}}>
+        <Text style={{color:'#FF4D6D',fontFamily:'monospace',fontSize:11,fontWeight:'900'}}>VS {pvpOpponentName}</Text>
+        {pvpTimer!==null&&<View style={{backgroundColor:pvpTimer<=3?'rgba(239,68,68,0.3)':'rgba(255,215,0,0.15)',borderRadius:8,paddingHorizontal:8,paddingVertical:2,borderWidth:1.5,borderColor:pvpTimer<=3?'#EF4444':'#FFD700'}}>
+          <Text style={{color:pvpTimer<=3?'#EF4444':'#FFD700',fontFamily:'monospace',fontSize:14,fontWeight:'900'}}>{pvpTimer}s</Text>
+        </View>}
+      </View>
+    </View>}
     {!isPlaytest&&combo>1&&<View style={st.comboBox} pointerEvents="none"><Text style={[st.comboText,combo>=5&&{color:'#FF4500',fontSize:28}]}>COMBO x{combo}</Text></View>}
     {comboText&&<View style={{position:'absolute',top:SH/2-80,width:'100%',alignItems:'center',zIndex:18}} pointerEvents="none">
       <Text style={{color:'#FFD700',fontSize:36,fontWeight:'900',fontFamily:'monospace',letterSpacing:4,textShadowColor:'rgba(255,69,0,0.9)',textShadowRadius:20,textShadowOffset:{width:0,height:2}}}>{comboText}</Text>
@@ -1811,9 +2055,40 @@ export default function TestPlayScreen() {
         <View style={{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(0,229,255,0.35)'}}/>
       </View>
     )}
+    {/* Effect 4: combo border glow — colorful cycling edges */}
+    {vignetteOpacity>0&&(()=>{
+      const t=Date.now()/1000;
+      const r=Math.round(128+127*Math.sin(t*1.1));
+      const g=Math.round(128+127*Math.sin(t*1.1+2.09));
+      const b=Math.round(128+127*Math.sin(t*1.1+4.19));
+      const glow=`rgba(${r},${g},${b},${vignetteOpacity*0.35})`;
+      const glow2=`rgba(${b},${r},${g},${vignetteOpacity*0.28})`;
+      return <View style={{...StyleSheet.absoluteFillObject,zIndex:8,top:PLAY_TOP,overflow:'hidden'}} pointerEvents="none">
+        <LinearGradient colors={[glow,'transparent']} style={{position:'absolute',top:0,left:0,right:0,height:160}}/>
+        <LinearGradient colors={['transparent',glow]} style={{position:'absolute',bottom:0,left:0,right:0,height:160}}/>
+        <LinearGradient colors={[glow2,'transparent']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,left:0,bottom:0,width:90}}/>
+        <LinearGradient colors={['transparent',glow2]} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,right:0,bottom:0,width:90}}/>
+      </View>;
+    })()}
+    {/* Last-ball premium pulsing red border */}
+    {balls===1&&!victory&&!gameOver&&(
+      <Animated.View style={{...StyleSheet.absoluteFillObject,zIndex:9,top:PLAY_TOP,opacity:lastBallPulse}} pointerEvents="none">
+        <LinearGradient colors={['rgba(255,0,60,0.85)','transparent']} style={{position:'absolute',top:0,left:0,right:0,height:80}}/>
+        <LinearGradient colors={['transparent','rgba(255,0,60,0.85)']} style={{position:'absolute',bottom:0,left:0,right:0,height:80}}/>
+        <LinearGradient colors={['rgba(255,0,60,0.7)','transparent']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,left:0,bottom:0,width:70}}/>
+        <LinearGradient colors={['transparent','rgba(255,0,60,0.7)']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,right:0,bottom:0,width:70}}/>
+        <View style={{position:'absolute',top:12,alignSelf:'center',backgroundColor:'rgba(255,0,60,0.9)',borderRadius:14,paddingHorizontal:14,paddingVertical:5,borderWidth:1.5,borderColor:'rgba(255,255,255,0.5)'}}>
+          <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:11,letterSpacing:2}}>LAST BALL</Text>
+        </View>
+      </Animated.View>
+    )}
     <GestureDetector gesture={gesture}>
     <View style={{flex:1}}>
     <Canvas style={{flex:1}}>
+    {/* Effect 1: Floating fireflies — summer vibes, rise upward, warm colors */}
+    {stars.map((star:any,si:number)=>(
+      <Circle key={`ff${si}`} cx={star.x} cy={star.y} r={star.r} color={star.color||'#FFD700'} opacity={star.opacity}/>
+    ))}
     <Group transform={zoomTransform}>
     {(()=>{const isLong=pendingBonus==='longShot';const sp=isLong?20:13;const cnt=isLong?12:6;
     return Array.from({length:cnt}).map((_,i)=><AimDot key={`ad${i}_${cnt}`} i={i} aimAngle={aimAngle} shootingSV={shootingSV} spacing={sp}/>);})()}
@@ -1860,47 +2135,57 @@ export default function TestPlayScreen() {
           strokeJoin="round" strokeCap="round" opacity={0.8}/>}
       </>);
     })()}
-    {pegs.map((p,i)=>{
-      if(p.hit&&p.type!=='bumper'&&p.type!=='bumper_big'&&p.type!=='curved_left'&&p.type!=='curved_right'&&p.type!=='teleport_a'&&p.type!=='teleport_b') return null;
-      let img:any=null,imgSize=PEG_IMG;
-      if(p.type==='peg_red'){img=btcImg;imgSize=PEG_IMG;}
-      else if(p.type==='peg_blue'){img=solImg;imgSize=PEG_IMG;}
-      else if(p.type==='peg_gold'){img=skrImg;imgSize=PEG_IMG;}
-      else if(p.type==='bumper'){img=bumpImg;imgSize=BUMP_IMG;}
-      else if(p.type==='bumper_big'){img=bigStarImg??bumpImg;imgSize=BUMP_BIG_IMG;}
-      else if(p.type==='curved_left'||p.type==='curved_right'){img=curvaImg;imgSize=VORTEX_IMG;}
-      // Teleports: use TeleportA.png / TeleportB.png with glow
-      else if(p.type==='teleport_a'||p.type==='teleport_b'){
-        const pc=p.type==='teleport_a'?'#00E5FF':'#FF6B00';
-        const tImg=p.type==='teleport_a'?teleportAImg:teleportBImg;
-        const imgS=CELL*1.15;
+    {(()=>{
+      // Effect 9: count remaining gold pegs for tension detection
+      const skrRemaining=pegs.filter(p=>p.type==='peg_gold'&&!p.hit&&!p.touched).length;
+      const tensionActive=skrRemaining<=2&&skrRemaining>0&&shooting;
+      // Effect 2: pulse delta when ball not active
+      const pulseDelta=!shooting?0.15*Math.sin(pulseVal):0;
+      return pegs.map((p,i)=>{
+        if(p.hit&&p.type!=='bumper'&&p.type!=='bumper_big'&&p.type!=='curved_left'&&p.type!=='curved_right'&&p.type!=='teleport_a'&&p.type!=='teleport_b') return null;
+        let img:any=null,imgSize=PEG_IMG;
+        if(p.type==='peg_red'){img=btcImg;imgSize=PEG_IMG;}
+        else if(p.type==='peg_blue'){img=solImg;imgSize=PEG_IMG;}
+        else if(p.type==='peg_gold'){img=skrImg;imgSize=PEG_IMG;}
+        else if(p.type==='bumper'){img=bumpImg;imgSize=BUMP_IMG;}
+        else if(p.type==='bumper_big'){img=bigStarImg??bumpImg;imgSize=BUMP_BIG_IMG;}
+        else if(p.type==='curved_left'||p.type==='curved_right'){img=curvaImg;imgSize=VORTEX_IMG;}
+        else if(p.type==='teleport_a'||p.type==='teleport_b'){
+          const pc=p.type==='teleport_a'?'#00E5FF':'#FF6B00';
+          const tImg=p.type==='teleport_a'?teleportAImg:teleportBImg;
+          const imgS=CELL*1.15;
+          return (<React.Fragment key={`p${i}`}>
+            <Circle cx={p.x} cy={p.y} r={p.r+5} color={pc} opacity={0.12}/>
+            <Circle cx={p.x} cy={p.y} r={p.r+2} color="transparent">
+              <Shadow dx={0} dy={0} blur={18} color={pc}/>
+            </Circle>
+            {tImg&&<SkiaImage image={tImg} x={p.x-imgS/2} y={p.y-imgS/2} width={imgS} height={imgS}/>}
+          </React.Fragment>);
+        }
+        if(!img) return null;
+        let op=1;
+        if(p.touched&&p.touchTime>0){
+          const elapsed=Date.now()-p.touchTime;
+          if(elapsed>400) op=Math.max(0,1-(elapsed-400)/350);
+        }
+        // Effect 9: tension flash overrides gold peg color
+        const isGold=p.type==='peg_gold';
+        const tensionThis=tensionActive&&isGold;
+        const strokeC=tensionThis&&tensionOn?'#FFFFFF':p.type==='peg_red'?C.orange:isGold?C.gold:p.type==='peg_blue'?C.blue:C.green;
+        const glowOp=p.touched?0.85:0.55;
+        // Effect 2: pulse radius on idle pegs
+        const pulseExtra=(!shooting&&!p.touched)?pulseDelta:0;
         return (<React.Fragment key={`p${i}`}>
-          <Circle cx={p.x} cy={p.y} r={p.r+5} color={pc} opacity={0.12}/>
-          <Circle cx={p.x} cy={p.y} r={p.r+2} color="transparent">
-            <Shadow dx={0} dy={0} blur={18} color={pc}/>
-          </Circle>
-          {tImg&&<SkiaImage image={tImg} x={p.x-imgS/2} y={p.y-imgS/2} width={imgS} height={imgS}/>}
+          <Circle cx={p.x} cy={p.y} r={p.r+2.5+pulseExtra} color={strokeC} opacity={op*glowOp}/>
+          {(!shooting&&!p.touched)&&<Circle cx={p.x} cy={p.y} r={p.r+5+pulseExtra} color={strokeC} opacity={op*0.12}/>}
+          {p.touched&&op>0.5&&<Circle cx={p.x} cy={p.y} r={p.r+6} color={strokeC} opacity={0.2}/>}
+          <SkiaImage image={img} x={p.x-imgSize/2} y={p.y-imgSize/2} width={imgSize} height={imgSize} opacity={op}/>
         </React.Fragment>);
-      }
-      if(!img) return null;
-      // 400ms full → 350ms fade → gone at 750ms
-      let op=1;
-      if(p.touched&&p.touchTime>0){
-        const elapsed=Date.now()-p.touchTime;
-        if(elapsed>400) op=Math.max(0,1-(elapsed-400)/350);
-      }
-      const strokeC=p.type==='peg_red'?C.orange:p.type==='peg_gold'?C.gold:p.type==='peg_blue'?C.blue:C.green;
-      const glowOp=p.touched?0.85:0.55; // brighter glow on touched pegs
-      return (<React.Fragment key={`p${i}`}>
-        <Circle cx={p.x} cy={p.y} r={p.r+2.5} color={strokeC} opacity={op*glowOp}/>
-        {p.touched&&op>0.5&&<Circle cx={p.x} cy={p.y} r={p.r+6} color={strokeC} opacity={0.2}/>}
-        <SkiaImage image={img} x={p.x-imgSize/2} y={p.y-imgSize/2} width={imgSize} height={imgSize} opacity={op}/>
-      </React.Fragment>);
-    })}
+      });
+    })()}
     {Array.from({length:movingObsCount}).map((_,i)=><MovingObstacleRenderer key={`mo${i}`} index={i} movingObsSV={movingObsSV} image={movingImg}/>)}
-    {/* Trail dots */}
-    {Array.from({length:8}).map((_,i)=><TrailDot key={`tr${i}`} i={i} trailXs={trailXs} trailYs={trailYs}
-      color={ballSkin==='gold'?'#FFD700':ballSkin==='crystal'?'#90D5FF':ballSkin==='neon_blue'?'#00D4FF':ballSkin==='fire'?'#FF6B00':ballSkin==='rainbow'?'#FF69B4':'rgba(255,255,255,0.6)'}/>)}
+    {/* Trail dots — Effect 3 (rainbow trail color) + Effect 8 (longer hot trail) */}
+    {Array.from({length:combo>=5?12:8}).map((_,i)=><TrailDot key={`tr${i}`} i={i} trailXs={trailXs} trailYs={trailYs} trailColor={trailColor}/>)}
     {/* Ball with skin */}
     {(()=>{
       const skinColors:{[k:string]:{ball:string,shadow:string,blur:number}}={
@@ -1923,6 +2208,22 @@ export default function TestPlayScreen() {
     <Circle cx={mb2x} cy={mb2y} r={BALL_R} color="#FF6B00"><Shadow dx={0} dy={0} blur={12} color="#FF6B00"/></Circle>
     {bucketImg&&<SkiaImage image={bucketImg} x={bucketX} y={PLAY_BOT-BUCKET_H} width={BUCKET_W} height={BUCKET_H}/>}
     {sparkles.map((s,i)=><Circle key={`sp${i}`} cx={s.x} cy={s.y} r={3} color={s.color} opacity={s.opacity}/>)}
+    {/* Effect 6: ripple rings on peg hit */}
+    {(()=>{
+      const rips=ripples.value;
+      return rips.map((rip,ri)=>{
+        const ringPath=Skia.Path.Make();
+        ringPath.addCircle(rip.x,rip.y,Math.max(1,rip.r));
+        return <SkiaPath key={`rip${ri}`} path={ringPath} color="rgba(255,255,255,0.85)" style="stroke" strokeWidth={2} opacity={rip.op}/>;
+      });
+    })()}
+    {/* Effect 5: bumper particle burst */}
+    {(()=>{
+      const parts=bumperParticles.value;
+      return parts.map((pt,pi)=>(
+        <Circle key={`bp${pi}`} cx={pt.x} cy={pt.y} r={Math.max(1,4*pt.life)} color={pt.color} opacity={Math.min(1,pt.life)}/>
+      ));
+    })()}
     </Group></Canvas>
     {popups.map(p=><Text key={`pop${p.id}`} style={[st.popup,{left:p.x-35,top:p.y,color:p.color,opacity:p.alpha}]}>{p.text}</Text>)}
     </View></GestureDetector>

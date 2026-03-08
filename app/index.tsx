@@ -175,6 +175,7 @@ export default function HomeScreen(){
   const [treasury,setTreasury]=useState<{skrAmount:number;usdValue:number}|null>(null);
   const [showWelcome,setShowWelcome]=useState(false);
   const [challengeCount,setChallengeCount]=useState(0);
+  const [earnableCount,setEarnableCount]=useState(0);
   const [showMyGames,setShowMyGames]=useState(false);
   const [myGamesList,setMyGamesList]=useState<any[]>([]);
   const joinedLoggedRef=useRef(false);
@@ -219,6 +220,7 @@ export default function HomeScreen(){
     if(!connected)return;
     AsyncStorage.getItem('global_muted').then(v=>{setGlobalMuted(v==='1');});
     if(user?.walletAddress) getChallengeNotifications(user.walletAddress).then(n=>setChallengeCount(n.length)).catch(()=>{});
+    AsyncStorage.getItem('earnable_achievements').then(v=>{try{setEarnableCount(v?JSON.parse(v).length:0);}catch{setEarnableCount(0);}}).catch(()=>{});
     // Global music (main.mp3) is managed by AppProviders — no need to control here
   },[connected]));
 
@@ -378,12 +380,25 @@ export default function HomeScreen(){
                   else{setMyGamesList(games);setShowMyGames(true);}
                 }}/>
             </View>
+            {earnableCount>0&&(
+              <TouchableOpacity onPress={()=>{playStart();router.push({pathname:'/settings',params:{tab:'achievements'}});}}
+                style={{flexDirection:'row',alignItems:'center',gap:10,marginBottom:10,backgroundColor:'rgba(255,215,0,0.12)',
+                  borderRadius:16,paddingHorizontal:16,paddingVertical:10,borderWidth:1.5,borderColor:'rgba(255,215,0,0.35)'}}>
+                <Image source={ICON_COPPA} style={{width:28,height:28,resizeMode:'contain'}}/>
+                <Text style={{color:C.yellow,fontFamily:'monospace',fontWeight:'900',fontSize:13,letterSpacing:0.5}}>
+                  {earnableCount} ready to claim →
+                </Text>
+              </TouchableOpacity>
+            )}
             <View style={{flexDirection:'row',gap:10}}>
               <GridBtn icon={ICON_COPPA}   label={t('rankings_btn')} color={C.yellow} onPress={()=>{playStart();router.push('/rankings');}}/>
-              <GridBtn icon={ICON_STELLA}  label={t('badges_btn')} color={C.mint}   onPress={()=>{playStart();router.push({pathname:'/settings',params:{tab:'achievements'}});}}/>
+              <GridBtn icon={ICON_STELLA}  label={t('badges_btn')} color={C.mint}   badge={earnableCount} onPress={()=>{playStart();router.push({pathname:'/settings',params:{tab:'achievements'}});}}/>
               <GridBtn icon={ICON_DUEL}    label={t('pvp')}      color={C.coral}  badge={challengeCount} onPress={()=>{playSword();router.push({pathname:'/rankings',params:{tab:'duels'}});}}/>
               <GridBtn icon={ICON_AI}      label={t('vs_ai')}    color={C.purple} onPress={()=>{playStart();router.push('/vs-ai');}}/>
             </View>
+            <CandyBtn icon={ICON_DUEL} label="PVP ONLINE" sub="Real-time matches"
+              c1="#FF4D6D" c2="#9945FF" shadow={C.coral} stretch
+              onPress={()=>{playSword();router.push('/pvp-online' as any);}}/>
           </View>
 
           {/* LIVE ACTIVITY */}

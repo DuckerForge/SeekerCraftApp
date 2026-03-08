@@ -584,3 +584,58 @@ export const voteReplay = async (replayId: string, walletAddress: string) => {
     return true
   } catch { return false }
 }
+
+// ─── ONLINE PVP ──────────────────────────────────────────────────────────
+
+export const createPvpRoom = async (hostWallet: string, hostName: string, levelData: any, levelName: string) => {
+  const roomId = `pvp_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  await set(ref(database, `pvp_rooms/${roomId}`), {
+    host: { wallet: hostWallet, name: hostName, score: 0, ballsUsed: 0, done: false },
+    guest: null,
+    level: levelData,
+    levelName,
+    status: 'waiting', // waiting -> playing -> finished
+    createdAt: Date.now(),
+  });
+  return roomId;
+};
+
+export const joinPvpRoom = async (roomId: string, guestWallet: string, guestName: string) => {
+  await update(ref(database, `pvp_rooms/${roomId}`), {
+    'guest': { wallet: guestWallet, name: guestName, score: 0, ballsUsed: 0, done: false },
+    'status': 'playing',
+  });
+};
+
+export const getPvpRooms = async () => {
+  const snap = await get(ref(database, 'pvp_rooms'));
+  if (!snap.exists()) return [];
+  const all = snap.val();
+  return Object.entries(all)
+    .filter(([_, v]: any) => v.status === 'waiting' && Date.now() - v.createdAt < 300000) // 5 min expiry
+    .map(([id, v]: any) => ({ id, ...v }));
+};
+
+export const updatePvpScore = async (roomId: string, role: 'host' | 'guest', score: number, ballsUsed: number, done: boolean) => {
+  await update(ref(database, `pvp_rooms/${roomId}/${role}`), { score, ballsUsed, done });
+  if (done) {
+    const snap = await get(ref(database, `pvp_rooms/${roomId}`));
+    if (snap.exists()) {
+      const room = snap.val();
+      if (room.host?.done && room.guest?.done) {
+        await update(ref(database, `pvp_rooms/${roomId}`), { status: 'finished' });
+      }
+    }
+  }
+};
+
+export const listenPvpRoom = (roomId: string, callback: (room: any) => void) => {
+  const roomRef = ref(database, `pvp_rooms/${roomId}`);
+  return onValue(roomRef, (snap) => {
+    if (snap.exists()) callback(snap.val());
+  });
+};
+
+export const deletePvpRoom = async (roomId: string) => {
+  await set(ref(database, `pvp_rooms/${roomId}`), null);
+};

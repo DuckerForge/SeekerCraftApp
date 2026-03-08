@@ -22,6 +22,7 @@ export default function RootLayout() {
         <Stack.Screen name="credits"          options={{ headerShown: false }}/>
         <Stack.Screen name="social"  options={{ headerShown: false }}/>
         <Stack.Screen name="vs-ai"   options={{ headerShown: false }}/>
+        <Stack.Screen name="pvp-online" options={{ headerShown: false }}/>
       </Stack>
       <StatusBar style="light" />
     </AppProviders>

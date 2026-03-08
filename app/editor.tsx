@@ -98,6 +98,7 @@ export default function EditorScreen() {
 
   useEffect(() => {
     loadLevel();
+    AsyncStorage.getItem('global_muted').then(v => { if(v==='1') setMusicMuted(true); }).catch(()=>{});
     // First-time editor tutorial
     AsyncStorage.getItem('@editor_tutorial_done').then(v => {
       if (!v) setEditorTutStep(0);
@@ -307,7 +308,7 @@ export default function EditorScreen() {
 
   // ── TOGGLE CELL ───────────────────────────────────────────────────────────
   const toggleCell = (r: number, c: number) => {
-    selectgPlayer.seekTo(0); selectgPlayer.play();
+    if(!musicMuted){try{selectgPlayer.seekTo(0);selectgPlayer.play();}catch{}}
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (tool === 'curve_track') {
@@ -509,7 +510,7 @@ export default function EditorScreen() {
                   setTool(key as GridCell);
                   setCurveStart(null);
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  selecttPlayer.seekTo(0); selecttPlayer.play();
+                  if(!musicMuted){try{selecttPlayer.seekTo(0);selecttPlayer.play();}catch{}}
                   if (key === 'bucket') setShowBucketPicker(true);
                 }}
                 style={[st.toolBtn, {
