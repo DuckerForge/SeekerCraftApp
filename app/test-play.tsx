@@ -2058,32 +2058,10 @@ export default function TestPlayScreen() {
         <View style={{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(0,229,255,0.35)'}}/>
       </View>
     )}
-    {/* Effect 4: combo border glow — colorful cycling edges */}
-    {vignetteOpacity>0&&(()=>{
-      const t=Date.now()/1000;
-      const r=Math.round(128+127*Math.sin(t*1.1));
-      const g=Math.round(128+127*Math.sin(t*1.1+2.09));
-      const b=Math.round(128+127*Math.sin(t*1.1+4.19));
-      const glow=`rgba(${r},${g},${b},${vignetteOpacity*0.18})`;
-      const glow2=`rgba(${b},${r},${g},${vignetteOpacity*0.14})`;
-      return <View style={{...StyleSheet.absoluteFillObject,zIndex:8,overflow:'hidden'}} pointerEvents="none">
-        <LinearGradient colors={[glow,'transparent']} style={{position:'absolute',top:0,left:0,right:0,height:160}}/>
-        <LinearGradient colors={['transparent',glow]} style={{position:'absolute',bottom:0,left:0,right:0,height:160}}/>
-        <LinearGradient colors={[glow2,'transparent']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,left:0,bottom:0,width:90}}/>
-        <LinearGradient colors={['transparent',glow2]} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,right:0,bottom:0,width:90}}/>
-      </View>;
-    })()}
-    {/* Last-ball premium pulsing red border */}
     {balls===1&&!victory&&!gameOver&&(
-      <Animated.View style={{...StyleSheet.absoluteFillObject,zIndex:9,opacity:lastBallPulse}} pointerEvents="none">
-        <LinearGradient colors={['rgba(255,0,60,0.6)','transparent']} style={{position:'absolute',top:0,left:0,right:0,height:80}}/>
-        <LinearGradient colors={['transparent','rgba(255,0,60,0.6)']} style={{position:'absolute',bottom:0,left:0,right:0,height:80}}/>
-        <LinearGradient colors={['rgba(255,0,60,0.5)','transparent']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,left:0,bottom:0,width:70}}/>
-        <LinearGradient colors={['transparent','rgba(255,0,60,0.5)']} start={{x:0,y:0.5}} end={{x:1,y:0.5}} style={{position:'absolute',top:0,right:0,bottom:0,width:70}}/>
-        <View style={{position:'absolute',top:12,alignSelf:'center',backgroundColor:'rgba(255,0,60,0.9)',borderRadius:14,paddingHorizontal:14,paddingVertical:5,borderWidth:1.5,borderColor:'rgba(255,255,255,0.5)'}}>
-          <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:11,letterSpacing:2}}>LAST BALL</Text>
-        </View>
-      </Animated.View>
+      <View style={{position:'absolute',top:12,alignSelf:'center',zIndex:9,backgroundColor:'rgba(255,0,60,0.9)',borderRadius:14,paddingHorizontal:14,paddingVertical:5,borderWidth:1.5,borderColor:'rgba(255,255,255,0.5)'}} pointerEvents="none">
+        <Text style={{color:'#fff',fontFamily:'monospace',fontWeight:'900',fontSize:11,letterSpacing:2}}>LAST BALL</Text>
+      </View>
     )}
     <GestureDetector gesture={gesture}>
     <View style={{flex:1}}>
