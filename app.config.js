@@ -4,7 +4,7 @@ module.exports = {
   expo: {
     name: "SeekerCraft",
     slug: "seekercraft",
-    version: "1.0.8",
+    version: "1.0.9",
     orientation: "portrait",
     icon: "./assets/images/log.png",
     scheme: "seekercraft",
@@ -13,7 +13,7 @@ module.exports = {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.duckerforge.seekercraft",
-      buildNumber: "9",
+      buildNumber: "10",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -26,7 +26,7 @@ module.exports = {
         backgroundColor: "#1a1a2e",
       },
       package: "com.duckerforge.seekercraft",
-      versionCode: 10,
+      versionCode: 11,
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },
